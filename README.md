@@ -12,6 +12,7 @@ The escrow contract is deployed and initialized on Stellar Testnet. Mainnet depl
 - Deploy transaction: [`836cc43a…8c296d`](https://stellar.expert/explorer/testnet/tx/836cc43ad184a5f7de6d2b4f2b7f1daec4e70156ca24be55b4278ee7b58c296d)
 - Initialize transaction: [`4a5eccfe…1b522e`](https://stellar.expert/explorer/testnet/tx/4a5eccfef4477ba49bfc6b504fc293d1922073abb4c3965c006ccb7e811b522e)
 - Payment asset: native Testnet XLM asset contract, used only for deployment verification—not represented as a stablecoin.
+- On-chain booking evidence: booking `1` was created as `PendingFunding` ([transaction](https://stellar.expert/explorer/testnet/tx/1be8a021b27fd0d1130f00de0d2ffa2c512594b54cf6fad87b30a696665e893d)).
 
 ## Workspace
 
