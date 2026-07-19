@@ -6,6 +6,8 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml"
+    "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml",
+    "start": "pnpm --filter @pov-deposit/api start",
+    "migrate": "pnpm --filter @pov-deposit/api migrate"
   }
 }
