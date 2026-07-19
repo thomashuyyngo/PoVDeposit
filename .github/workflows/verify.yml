@@ -1,0 +1,32 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [development]
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+      - run: cargo fmt --manifest-path packages/contracts/Cargo.toml --check
+      - run: cargo clippy --manifest-path packages/contracts/Cargo.toml -- -D warnings
+      - run: cargo test --manifest-path packages/contracts/Cargo.toml
