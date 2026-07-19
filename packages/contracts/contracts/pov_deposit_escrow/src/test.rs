@@ -68,7 +68,9 @@ fn funds_a_pending_booking_with_the_configured_asset() {
     let admin = Address::generate(&env);
     let arbitrator = Address::generate(&env);
     let asset_admin = Address::generate(&env);
-    let payment_asset = env.register_stellar_asset_contract_v2(asset_admin).address();
+    let payment_asset = env
+        .register_stellar_asset_contract_v2(asset_admin)
+        .address();
     let renter = Address::generate(&env);
     let host = Address::generate(&env);
     let token = token::StellarAssetClient::new(&env, &payment_asset);

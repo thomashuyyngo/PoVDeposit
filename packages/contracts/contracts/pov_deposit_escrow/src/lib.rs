@@ -109,11 +109,7 @@ impl PovDepositEscrow {
             .unwrap()
     }
 
-    pub fn cancel_booking(
-        env: Env,
-        renter: Address,
-        booking_id: u64,
-    ) -> Result<(), ContractError> {
+    pub fn cancel_booking(env: Env, renter: Address, booking_id: u64) -> Result<(), ContractError> {
         let key = DataKey::Booking(booking_id);
         let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
         if booking.renter != renter {
@@ -129,11 +125,7 @@ impl PovDepositEscrow {
         Ok(())
     }
 
-    pub fn fund_booking(
-        env: Env,
-        renter: Address,
-        booking_id: u64,
-    ) -> Result<(), ContractError> {
+    pub fn fund_booking(env: Env, renter: Address, booking_id: u64) -> Result<(), ContractError> {
         let key = DataKey::Booking(booking_id);
         let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
         if booking.renter != renter {
@@ -151,7 +143,7 @@ impl PovDepositEscrow {
             .unwrap();
         token::Client::new(&env, &payment_asset).transfer(
             &renter,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &booking.deposit_amount,
         );
         booking.state = BookingState::Funded;
@@ -159,11 +151,7 @@ impl PovDepositEscrow {
         Ok(())
     }
 
-    pub fn release_booking(
-        env: Env,
-        host: Address,
-        booking_id: u64,
-    ) -> Result<(), ContractError> {
+    pub fn release_booking(env: Env, host: Address, booking_id: u64) -> Result<(), ContractError> {
         let key = DataKey::Booking(booking_id);
         let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
         if booking.host != host {
@@ -226,11 +214,8 @@ impl PovDepositEscrow {
         arbitrator: Address,
         booking_id: u64,
     ) -> Result<(), ContractError> {
-        let expected_arbitrator: Address = env
-            .storage()
-            .instance()
-            .get(&DataKey::Arbitrator)
-            .unwrap();
+        let expected_arbitrator: Address =
+            env.storage().instance().get(&DataKey::Arbitrator).unwrap();
         if arbitrator != expected_arbitrator {
             return Err(ContractError::UnauthorizedArbitrator);
         }
