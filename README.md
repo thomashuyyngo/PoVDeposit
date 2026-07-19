@@ -13,3 +13,13 @@ Implementation has started on the `development` branch. Mainnet deployment, Main
 - `packages/contracts` — Soroban visit-deposit escrow
 - `packages/stellar` — wallet and contract utilities
 - `docs` — product, security, deployment, and evidence records
+
+## Local checks
+
+```powershell
+pnpm test
+Set-Location packages/contracts
+cargo test
+```
+
+Open `apps/web/index.html` for the current rental-escrow demo. Contract tests cover token funding, host release, and arbitrator refund using the local Soroban host; deployment and wallet integration are not claimed until they are configured and verified on Testnet.
