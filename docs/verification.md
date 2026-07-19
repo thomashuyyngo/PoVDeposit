@@ -9,6 +9,6 @@ cargo test
 stellar contract build
 ```
 
-The release build produced `pov_deposit_escrow.wasm` (7,096 bytes) with SHA-256 `3efe5838b4274253f0856baa0be38da2e63da8a94437e3af73309e9832565fbf`.
+The current release build produced `pov_deposit_escrow.wasm` (7,456 bytes) with SHA-256 `01e9649cb8221d87bf1b61660962ff6804ee78c2bba541ba8912599c07ac0346`.
 
 This is a local build record, not a Testnet deployment claim.
