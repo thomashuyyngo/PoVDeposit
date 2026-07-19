@@ -21,6 +21,7 @@ pub enum BookingState {
     PendingFunding = 1,
     Funded = 2,
     Released = 3,
+    Refunded = 4,
 }
 
 #[contracttype]
@@ -39,6 +40,7 @@ pub enum ContractError {
     InvalidBookingState = 2,
     UnauthorizedRenter = 3,
     UnauthorizedHost = 4,
+    UnauthorizedArbitrator = 5,
 }
 
 #[contractimpl]
@@ -160,6 +162,42 @@ impl PovDepositEscrow {
             &booking.deposit_amount,
         );
         booking.state = BookingState::Released;
+        env.storage().persistent().set(&key, &booking);
+        Ok(())
+    }
+
+    pub fn refund_booking(
+        env: Env,
+        arbitrator: Address,
+        booking_id: u64,
+    ) -> Result<(), ContractError> {
+        let expected_arbitrator: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Arbitrator)
+            .unwrap();
+        if arbitrator != expected_arbitrator {
+            return Err(ContractError::UnauthorizedArbitrator);
+        }
+
+        let key = DataKey::Booking(booking_id);
+        let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
+        if booking.state != BookingState::Funded {
+            return Err(ContractError::InvalidBookingState);
+        }
+
+        arbitrator.require_auth();
+        let payment_asset: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::PaymentAsset)
+            .unwrap();
+        token::Client::new(&env, &payment_asset).transfer(
+            &env.current_contract_address(),
+            &booking.renter,
+            &booking.deposit_amount,
+        );
+        booking.state = BookingState::Refunded;
         env.storage().persistent().set(&key, &booking);
         Ok(())
     }
