@@ -6,6 +6,10 @@ PoVDeposit is a Stellar Testnet escrow platform for rental-property viewing appo
 
 The escrow contract is deployed and initialized on Stellar Testnet. Mainnet deployment, stablecoin integration, user evidence, external audits, and demo video are intentionally not claimed.
 
+## Railway deployment
+
+Railway successfully deployed the current `development` revision on 2026-07-19. The service is configured to run `pnpm start`, exposes `/health`, and applies the Neon schema with `pnpm migrate`. [Railway deployment dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6)
+
 ## Testnet deployment
 
 - Escrow v2: [`CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF`](https://lab.stellar.org/r/testnet/contract/CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF)
