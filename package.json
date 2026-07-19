@@ -5,6 +5,7 @@
   "scripts": {
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml"
   }
 }
