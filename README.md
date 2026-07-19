@@ -18,6 +18,7 @@ Railway successfully deployed the current `development` revision on 2026-07-19. 
 - Payment asset: native Testnet XLM asset contract, used only for deployment verification—not represented as a stablecoin.
 - On-chain booking evidence: booking `1` was created as `PendingFunding` ([transaction](https://stellar.expert/explorer/testnet/tx/1be8a021b27fd0d1130f00de0d2ffa2c512594b54cf6fad87b30a696665e893d)), funded with 1 native Testnet atomic unit ([transaction](https://stellar.expert/explorer/testnet/tx/9fc984b7bb9572ec1101d36e9eef796c1f1bbca9ed691a44689815d4f3330e93)), checked in ([transaction](https://stellar.expert/explorer/testnet/tx/df882931a7d37b0d30ca9002c88a4ea2c47bcc3f1e6d7e75a53435c7825de95a)), and released ([transaction](https://stellar.expert/explorer/testnet/tx/2900d7e4a8cfcd42bbe7233ab3ed24e8267db710869c67ba551dc7762b9a2ee1)). The final on-chain state is `Released`.
 - Escrow v2 cancellation evidence: booking `1` was created ([transaction](https://stellar.expert/explorer/testnet/tx/746222b0c11e65cecb049440fb621315fadd7b8eeb1143a9d74b73ba938f1b93)) and cancelled before funding ([transaction](https://stellar.expert/explorer/testnet/tx/31074806e8a6c0dfc96984e431928a6b1f3efd702a242a8f33b6de1b4042bede)).
+- Current v2 wallet smoke test: a controlled renter/host pair completed booking `2` through `PendingFunding → Funded → CheckedIn → Released`; [wallet smoke evidence](docs/testnet-wallet-smoke.md).
 
 ## Workspace
 
