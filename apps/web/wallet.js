@@ -1,4 +1,5 @@
 export const TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
+export const FREIGHTER_SDK_URL = "https://cdn.jsdelivr.net/npm/@stellar/freighter-api@6.0.1/+esm";
 
 const message = (value) => typeof value === "string" ? value : value?.message || "Wallet request failed";
 
@@ -10,17 +11,23 @@ export function isTestnet(network) {
   return network?.network === "TESTNET" || network?.networkPassphrase === TESTNET_PASSPHRASE;
 }
 
-export function walletAvailability(scope = globalThis) {
-  return {
-    freighter: typeof scope.freighterApi?.requestAccess === "function",
-    rabet: typeof scope.rabet?.connect === "function",
-  };
+async function freighter(scope) {
+  if (typeof scope.freighterApi?.requestAccess === "function") return scope.freighterApi;
+  const api = scope.__freighterSdk || await import(FREIGHTER_SDK_URL);
+  const connection = await api.isConnected();
+  if (connection?.error || !connection?.isConnected) throw new Error("Freighter extension is not installed or is locked");
+  return api;
+}
+
+export async function walletAvailability(scope = globalThis) {
+  let freighterInstalled = false;
+  try { await freighter(scope); freighterInstalled = true; } catch { /* show installation guidance */ }
+  return { freighter: freighterInstalled, rabet: typeof scope.rabet?.connect === "function" };
 }
 
 export async function connectWallet(kind, scope = globalThis) {
   if (kind === "freighter") {
-    const api = scope.freighterApi;
-    if (!api?.requestAccess) throw new Error("Freighter extension is not installed");
+    const api = await freighter(scope);
     const access = await api.requestAccess();
     if (access?.error || !access?.address) throw new Error(message(access?.error));
     const network = api.getNetwork ? await api.getNetwork() : null;
