@@ -3,18 +3,13 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import pg from "pg";
+import { readJson } from "./body.js";
 import { health } from "./health.js";
 import { persistBookingIntent } from "./booking.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const webRoot = join(dirname(fileURLToPath(import.meta.url)), "../../web/index.html");
-
-async function readJson(request) {
-  let body = "";
-  for await (const chunk of request) body += chunk;
-  return JSON.parse(body || "{}");
-}
 
 createServer(async (request, response) => {
   try {
