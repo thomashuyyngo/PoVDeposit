@@ -12,8 +12,11 @@ export function isTestnet(network) {
 }
 
 async function freighter(scope) {
-  if (typeof scope.freighterApi?.requestAccess === "function") return scope.freighterApi;
-  const api = scope.__freighterSdk || await import(FREIGHTER_SDK_URL);
+  const module = scope.__freighterSdk || await import(FREIGHTER_SDK_URL);
+  const api = module.freighterApi || module.default?.freighterApi || module;
+  if (typeof api.isConnected !== "function" || typeof api.requestAccess !== "function") {
+    throw new Error("Freighter SDK did not load correctly");
+  }
   const connection = await api.isConnected();
   if (connection?.error || !connection?.isConnected) throw new Error("Freighter extension is not installed or is locked");
   return api;

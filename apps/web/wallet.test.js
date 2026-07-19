@@ -9,11 +9,11 @@ test("connects Rabet after the extension returns a public key", async () => {
 
 test("uses the official Freighter SDK when it is available", async () => {
   const wallet = await connectWallet("freighter", {
-    __freighterSdk: {
+    __freighterSdk: { freighterApi: {
       isConnected: async () => ({ isConnected: true }),
       requestAccess: async () => ({ address: "GFREIGHTER" }),
       getNetwork: async () => ({ network: "TESTNET" }),
-    },
+    } },
   });
   assert.equal(wallet.address, "GFREIGHTER");
 });
