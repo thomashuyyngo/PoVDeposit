@@ -23,6 +23,7 @@ pub enum BookingState {
     CheckedIn = 3,
     Released = 4,
     Refunded = 5,
+    Disputed = 6,
 }
 
 #[contracttype]
@@ -183,6 +184,22 @@ impl PovDepositEscrow {
         Ok(())
     }
 
+    pub fn open_dispute(env: Env, renter: Address, booking_id: u64) -> Result<(), ContractError> {
+        let key = DataKey::Booking(booking_id);
+        let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
+        if booking.renter != renter {
+            return Err(ContractError::UnauthorizedRenter);
+        }
+        if booking.state != BookingState::Funded && booking.state != BookingState::CheckedIn {
+            return Err(ContractError::InvalidBookingState);
+        }
+
+        renter.require_auth();
+        booking.state = BookingState::Disputed;
+        env.storage().persistent().set(&key, &booking);
+        Ok(())
+    }
+
     pub fn refund_booking(
         env: Env,
         arbitrator: Address,
@@ -199,7 +216,7 @@ impl PovDepositEscrow {
 
         let key = DataKey::Booking(booking_id);
         let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
-        if booking.state != BookingState::Funded {
+        if booking.state != BookingState::Funded && booking.state != BookingState::Disputed {
             return Err(ContractError::InvalidBookingState);
         }
 
