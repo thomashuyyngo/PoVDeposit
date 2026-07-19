@@ -8,7 +8,9 @@ The escrow contract is deployed and initialized on Stellar Testnet. Mainnet depl
 
 ## Railway deployment
 
-Railway successfully deployed the current `development` revision on 2026-07-19. The service runs `pnpm migrate && pnpm seed && pnpm start`, exposes `/health`, and uses Neon PostgreSQL. [Railway deployment dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6)
+Railway successfully deployed the current `development` revision on 2026-07-19. The service runs `pnpm migrate && pnpm seed && pnpm start`, exposes `/health`, and uses Neon PostgreSQL.
+
+The public Testnet application is [povdeposit-production.up.railway.app](https://povdeposit-production.up.railway.app/). Its [health endpoint](https://povdeposit-production.up.railway.app/health) returned HTTP 200 on 2026-07-19. The [Railway dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6) contains deployment history.
 
 ## Testnet deployment
 
@@ -43,3 +45,16 @@ Open `apps/web/index.html` for the current rental-escrow demo. `POST /api/bookin
 Set `DATABASE_URL` to the managed PostgreSQL connection string. `PORT` is optional and defaults to `3000`. Do not commit database credentials, wallet secrets, or Testnet key material.
 
 See [security boundaries](docs/security.md) and the [verification record](docs/verification.md) for the tested scope and known production gaps.
+
+## Level 6 readiness
+
+The repository is public at [thomashuyyngo/PoVDeposit](https://github.com/thomashuyyngo/PoVDeposit) and its `development` branch contains at least 30 meaningful commits. The app is live on Railway and the escrow has controlled Testnet transaction evidence for release and arbitrator refund.
+
+The following Level 6 items are intentionally separated by evidence type:
+
+- **Delivered for Testnet:** public application, Testnet contract, controlled transaction activity, technical documentation, verification records, and internal security boundaries.
+- **Not completed:** Mainnet deployment/address, proof of 20+ Mainnet users, external audit proof, and a published community contribution.
+- **User guidance:** the README documents the available Testnet booking flow; a standalone end-user guide remains in progress.
+- **Submission:** use the public repository URL above before the monthly deadline.
+
+No Mainnet, external-audit, or user-growth claim is made without verifiable evidence.
