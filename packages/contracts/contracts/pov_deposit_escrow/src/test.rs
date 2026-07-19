@@ -65,3 +65,28 @@ fn funds_a_pending_booking_with_the_configured_asset() {
     assert_eq!(token.balance(&contract_id), 500_000_000i128);
     assert_eq!(client.booking(&booking_id).state, BookingState::Funded);
 }
+
+#[test]
+fn releases_a_funded_booking_to_its_host() {
+    let env = Env::default();
+    let contract_id = env.register(PovDepositEscrow, ());
+    let client = PovDepositEscrowClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    let arbitrator = Address::generate(&env);
+    let payment_asset = env
+        .register_stellar_asset_contract_v2(Address::generate(&env))
+        .address();
+    let renter = Address::generate(&env);
+    let host = Address::generate(&env);
+    let token = token::StellarAssetClient::new(&env, &payment_asset);
+
+    env.mock_all_auths();
+    client.initialize(&admin, &arbitrator, &payment_asset);
+    token.mint(&renter, &500_000_000i128);
+    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
+    client.fund_booking(&renter, &booking_id);
+    client.release_booking(&host, &booking_id);
+
+    assert_eq!(token.balance(&host), 500_000_000i128);
+    assert_eq!(client.booking(&booking_id).state, BookingState::Released);
+}

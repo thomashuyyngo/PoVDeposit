@@ -20,6 +20,7 @@ enum DataKey {
 pub enum BookingState {
     PendingFunding = 1,
     Funded = 2,
+    Released = 3,
 }
 
 #[contracttype]
@@ -37,6 +38,7 @@ pub enum ContractError {
     AlreadyInitialized = 1,
     InvalidBookingState = 2,
     UnauthorizedRenter = 3,
+    UnauthorizedHost = 4,
 }
 
 #[contractimpl]
@@ -128,6 +130,36 @@ impl PovDepositEscrow {
             &booking.deposit_amount,
         );
         booking.state = BookingState::Funded;
+        env.storage().persistent().set(&key, &booking);
+        Ok(())
+    }
+
+    pub fn release_booking(
+        env: Env,
+        host: Address,
+        booking_id: u64,
+    ) -> Result<(), ContractError> {
+        let key = DataKey::Booking(booking_id);
+        let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
+        if booking.host != host {
+            return Err(ContractError::UnauthorizedHost);
+        }
+        if booking.state != BookingState::Funded {
+            return Err(ContractError::InvalidBookingState);
+        }
+
+        host.require_auth();
+        let payment_asset: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::PaymentAsset)
+            .unwrap();
+        token::Client::new(&env, &payment_asset).transfer(
+            &env.current_contract_address(),
+            &host,
+            &booking.deposit_amount,
+        );
+        booking.state = BookingState::Released;
         env.storage().persistent().set(&key, &booking);
         Ok(())
     }
