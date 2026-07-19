@@ -12,7 +12,7 @@ The escrow contract is deployed and initialized on Stellar Testnet. Mainnet depl
 - Deploy transaction: [`836cc43a…8c296d`](https://stellar.expert/explorer/testnet/tx/836cc43ad184a5f7de6d2b4f2b7f1daec4e70156ca24be55b4278ee7b58c296d)
 - Initialize transaction: [`4a5eccfe…1b522e`](https://stellar.expert/explorer/testnet/tx/4a5eccfef4477ba49bfc6b504fc293d1922073abb4c3965c006ccb7e811b522e)
 - Payment asset: native Testnet XLM asset contract, used only for deployment verification—not represented as a stablecoin.
-- On-chain booking evidence: booking `1` was created as `PendingFunding` ([transaction](https://stellar.expert/explorer/testnet/tx/1be8a021b27fd0d1130f00de0d2ffa2c512594b54cf6fad87b30a696665e893d)).
+- On-chain booking evidence: booking `1` was created as `PendingFunding` ([transaction](https://stellar.expert/explorer/testnet/tx/1be8a021b27fd0d1130f00de0d2ffa2c512594b54cf6fad87b30a696665e893d)), funded with 1 native Testnet atomic unit ([transaction](https://stellar.expert/explorer/testnet/tx/9fc984b7bb9572ec1101d36e9eef796c1f1bbca9ed691a44689815d4f3330e93)), checked in ([transaction](https://stellar.expert/explorer/testnet/tx/df882931a7d37b0d30ca9002c88a4ea2c47bcc3f1e6d7e75a53435c7825de95a)), and released ([transaction](https://stellar.expert/explorer/testnet/tx/2900d7e4a8cfcd42bbe7233ab3ed24e8267db710869c67ba551dc7762b9a2ee1)). The final on-chain state is `Released`.
 
 ## Workspace
 
