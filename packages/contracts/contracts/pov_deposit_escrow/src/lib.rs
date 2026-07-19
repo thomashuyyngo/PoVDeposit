@@ -10,6 +10,23 @@ pub struct PovDepositEscrow;
 enum DataKey {
     Admin,
     Arbitrator,
+    BookingCount,
+    Booking(u64),
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum BookingState {
+    PendingFunding = 1,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Booking {
+    pub renter: Address,
+    pub host: Address,
+    pub deposit_amount: i128,
+    pub state: BookingState,
 }
 
 #[contracterror]
@@ -39,6 +56,38 @@ impl PovDepositEscrow {
 
     pub fn arbitrator(env: Env) -> Address {
         env.storage().instance().get(&DataKey::Arbitrator).unwrap()
+    }
+
+    pub fn create_booking(env: Env, renter: Address, host: Address, deposit_amount: i128) -> u64 {
+        renter.require_auth();
+
+        let booking_id = env
+            .storage()
+            .instance()
+            .get::<_, u64>(&DataKey::BookingCount)
+            .unwrap_or(0)
+            + 1;
+        let booking = Booking {
+            renter,
+            host,
+            deposit_amount,
+            state: BookingState::PendingFunding,
+        };
+
+        env.storage()
+            .persistent()
+            .set(&DataKey::Booking(booking_id), &booking);
+        env.storage()
+            .instance()
+            .set(&DataKey::BookingCount, &booking_id);
+        booking_id
+    }
+
+    pub fn booking(env: Env, booking_id: u64) -> Booking {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Booking(booking_id))
+            .unwrap()
     }
 }
 
