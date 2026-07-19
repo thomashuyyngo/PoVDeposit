@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PoVDeposit</title>
+    <style>
+      :root { font-family: Georgia, serif; background: #f4f0e7; color: #273528; }
+      body { max-width: 1024px; margin: auto; padding: 48px 24px; }
+      header { padding: 42px; color: #f7f1e6; background: #294b3e; border-radius: 4px 48px 4px 48px; }
+      h1 { margin: 0; font-size: clamp(2.5rem, 8vw, 5rem); }
+      main { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 18px; }
+      section { background: #fffdf7; border: 1px solid #d8cfbd; border-radius: 18px; padding: 24px; }
+      .state { color: #9a5a26; font-weight: 700; letter-spacing: .08em; }
+      button { background: #294b3e; color: white; border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 700; }
+      small { color: #637064; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <small>Viewing-appointment escrow on Stellar Testnet</small>
+      <h1>Book the viewing. Keep the deposit fair.</h1>
+    </header>
+    <main>
+      <section>
+        <small>01 · Renter</small>
+        <h2>Choose a viewing slot</h2>
+        <p>Submit booking details before funding the contract-held deposit.</p>
+        <p class="state">PENDING FUNDING</p>
+      </section>
+      <section>
+        <small>02 · Escrow</small>
+        <h2>Fund with a Testnet asset</h2>
+        <p>Contract state moves to funded only after token transfer succeeds.</p>
+        <button type="button" disabled>Connect Testnet wallet to fund</button>
+      </section>
+      <section>
+        <small>03 · Outcome</small>
+        <h2>Release or refund</h2>
+        <p>Host release and arbitrator-approved refund routes are represented in the contract.</p>
+      </section>
+    </main>
+  </body>
+</html>
