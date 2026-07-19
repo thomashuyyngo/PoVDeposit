@@ -8,6 +8,7 @@
     "test": "pnpm -r test",
     "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml",
     "start": "pnpm --filter @pov-deposit/api start",
-    "migrate": "pnpm --filter @pov-deposit/api migrate"
+    "migrate": "pnpm --filter @pov-deposit/api migrate",
+    "seed": "pnpm --filter @pov-deposit/api seed"
   }
 }

@@ -6,8 +6,14 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejec
 await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     wallet_address TEXT PRIMARY KEY,
-    role TEXT NOT NULL CHECK (role IN ('RENTER', 'HOST', 'ARBITRATOR')),
+    role TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  ALTER TABLE users ALTER COLUMN role DROP NOT NULL;
+  CREATE TABLE IF NOT EXISTS user_roles (
+    wallet_address TEXT NOT NULL REFERENCES users(wallet_address),
+    role TEXT NOT NULL CHECK (role IN ('RENTER', 'HOST', 'ARBITRATOR')),
+    PRIMARY KEY (wallet_address, role)
   );
   CREATE TABLE IF NOT EXISTS listings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,5 +1,5 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": { "buildCommand": "pnpm install --frozen-lockfile" },
-  "deploy": { "startCommand": "pnpm start", "healthcheckPath": "/health" }
+  "deploy": { "startCommand": "pnpm migrate && pnpm seed && pnpm start", "healthcheckPath": "/health" }
 }
