@@ -9,7 +9,8 @@ import { persistBookingIntent } from "./booking.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-const webRoot = join(dirname(fileURLToPath(import.meta.url)), "../../web/index.html");
+const webDir = join(dirname(fileURLToPath(import.meta.url)), "../../web");
+const webRoot = join(webDir, "index.html");
 
 createServer(async (request, response) => {
   try {
@@ -22,6 +23,10 @@ createServer(async (request, response) => {
       const result = await persistBookingIntent(pool, await readJson(request));
       response.writeHead(result.status, { "content-type": "application/json" });
       return response.end(JSON.stringify(result.body));
+    }
+    if (request.url === "/wallet.js") {
+      response.writeHead(200, { "content-type": "text/javascript; charset=utf-8" });
+      return response.end(await readFile(join(webDir, "wallet.js")));
     }
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     return response.end(await readFile(webRoot));

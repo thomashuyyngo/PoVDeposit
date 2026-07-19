@@ -1,11 +1,12 @@
 {
   "name": "pov-deposit",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node --test apps/web/*.test.js",
     "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml",
     "start": "pnpm --filter @pov-deposit/api start",
     "migrate": "pnpm --filter @pov-deposit/api migrate",
