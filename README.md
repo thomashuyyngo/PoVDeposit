@@ -4,7 +4,14 @@ PoVDeposit is a Stellar Testnet escrow platform for rental-property viewing appo
 
 ## Status
 
-Implementation has started on the `development` branch. Mainnet deployment, Mainnet claims, user evidence, external audits, and demo video are intentionally not claimed.
+The escrow contract is deployed and initialized on Stellar Testnet. Mainnet deployment, stablecoin integration, user evidence, external audits, and demo video are intentionally not claimed.
+
+## Testnet deployment
+
+- Escrow: [`CAGCIQAVH7TJ527LIZJU45VDRH6E4HA37ULNBNQZO3G65ZFCCRNWJ2U7`](https://lab.stellar.org/r/testnet/contract/CAGCIQAVH7TJ527LIZJU45VDRH6E4HA37ULNBNQZO3G65ZFCCRNWJ2U7)
+- Deploy transaction: [`836cc43a…8c296d`](https://stellar.expert/explorer/testnet/tx/836cc43ad184a5f7de6d2b4f2b7f1daec4e70156ca24be55b4278ee7b58c296d)
+- Initialize transaction: [`4a5eccfe…1b522e`](https://stellar.expert/explorer/testnet/tx/4a5eccfef4477ba49bfc6b504fc293d1922073abb4c3965c006ccb7e811b522e)
+- Payment asset: native Testnet XLM asset contract, used only for deployment verification—not represented as a stablecoin.
 
 ## Workspace
 
