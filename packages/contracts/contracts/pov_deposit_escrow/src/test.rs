@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env};
+use soroban_sdk::{testutils::Address as _, token, Address, Env};
 
 #[test]
 fn initializes_with_an_authorized_arbitrator() {
@@ -10,9 +10,10 @@ fn initializes_with_an_authorized_arbitrator() {
     let client = PovDepositEscrowClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
     let arbitrator = Address::generate(&env);
+    let payment_asset = Address::generate(&env);
 
     env.mock_all_auths();
-    client.initialize(&admin, &arbitrator);
+    client.initialize(&admin, &arbitrator, &payment_asset);
 
     assert_eq!(client.admin(), admin);
     assert_eq!(client.arbitrator(), arbitrator);
@@ -25,11 +26,12 @@ fn creates_a_booking_pending_deposit_funding() {
     let client = PovDepositEscrowClient::new(&env, &contract_id);
     let admin = Address::generate(&env);
     let arbitrator = Address::generate(&env);
+    let payment_asset = Address::generate(&env);
     let renter = Address::generate(&env);
     let host = Address::generate(&env);
 
     env.mock_all_auths();
-    client.initialize(&admin, &arbitrator);
+    client.initialize(&admin, &arbitrator, &payment_asset);
     let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
 
     assert_eq!(booking_id, 1);
@@ -38,4 +40,28 @@ fn creates_a_booking_pending_deposit_funding() {
     assert_eq!(booking.host, host);
     assert_eq!(booking.deposit_amount, 500_000_000i128);
     assert_eq!(booking.state, BookingState::PendingFunding);
+}
+
+#[test]
+fn funds_a_pending_booking_with_the_configured_asset() {
+    let env = Env::default();
+    let contract_id = env.register(PovDepositEscrow, ());
+    let client = PovDepositEscrowClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    let arbitrator = Address::generate(&env);
+    let asset_admin = Address::generate(&env);
+    let payment_asset = env.register_stellar_asset_contract_v2(asset_admin).address();
+    let renter = Address::generate(&env);
+    let host = Address::generate(&env);
+    let token = token::StellarAssetClient::new(&env, &payment_asset);
+
+    env.mock_all_auths();
+    client.initialize(&admin, &arbitrator, &payment_asset);
+    token.mint(&renter, &500_000_000i128);
+    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
+
+    client.fund_booking(&renter, &booking_id);
+
+    assert_eq!(token.balance(&contract_id), 500_000_000i128);
+    assert_eq!(client.booking(&booking_id).state, BookingState::Funded);
 }

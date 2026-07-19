@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env};
 
 #[contract]
 pub struct PovDepositEscrow;
@@ -10,6 +10,7 @@ pub struct PovDepositEscrow;
 enum DataKey {
     Admin,
     Arbitrator,
+    PaymentAsset,
     BookingCount,
     Booking(u64),
 }
@@ -18,6 +19,7 @@ enum DataKey {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum BookingState {
     PendingFunding = 1,
+    Funded = 2,
 }
 
 #[contracttype]
@@ -33,11 +35,18 @@ pub struct Booking {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ContractError {
     AlreadyInitialized = 1,
+    InvalidBookingState = 2,
+    UnauthorizedRenter = 3,
 }
 
 #[contractimpl]
 impl PovDepositEscrow {
-    pub fn initialize(env: Env, admin: Address, arbitrator: Address) -> Result<(), ContractError> {
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        arbitrator: Address,
+        payment_asset: Address,
+    ) -> Result<(), ContractError> {
         if env.storage().instance().has(&DataKey::Admin) {
             return Err(ContractError::AlreadyInitialized);
         }
@@ -47,6 +56,9 @@ impl PovDepositEscrow {
         env.storage()
             .instance()
             .set(&DataKey::Arbitrator, &arbitrator);
+        env.storage()
+            .instance()
+            .set(&DataKey::PaymentAsset, &payment_asset);
         Ok(())
     }
 
@@ -88,6 +100,36 @@ impl PovDepositEscrow {
             .persistent()
             .get(&DataKey::Booking(booking_id))
             .unwrap()
+    }
+
+    pub fn fund_booking(
+        env: Env,
+        renter: Address,
+        booking_id: u64,
+    ) -> Result<(), ContractError> {
+        let key = DataKey::Booking(booking_id);
+        let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
+        if booking.renter != renter {
+            return Err(ContractError::UnauthorizedRenter);
+        }
+        if booking.state != BookingState::PendingFunding {
+            return Err(ContractError::InvalidBookingState);
+        }
+
+        renter.require_auth();
+        let payment_asset: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::PaymentAsset)
+            .unwrap();
+        token::Client::new(&env, &payment_asset).transfer(
+            &renter,
+            &env.current_contract_address(),
+            &booking.deposit_amount,
+        );
+        booking.state = BookingState::Funded;
+        env.storage().persistent().set(&key, &booking);
+        Ok(())
     }
 }
 
