@@ -24,6 +24,7 @@ pub enum BookingState {
     Released = 4,
     Refunded = 5,
     Disputed = 6,
+    Cancelled = 7,
 }
 
 #[contracttype]
@@ -106,6 +107,26 @@ impl PovDepositEscrow {
             .persistent()
             .get(&DataKey::Booking(booking_id))
             .unwrap()
+    }
+
+    pub fn cancel_booking(
+        env: Env,
+        renter: Address,
+        booking_id: u64,
+    ) -> Result<(), ContractError> {
+        let key = DataKey::Booking(booking_id);
+        let mut booking: Booking = env.storage().persistent().get(&key).unwrap();
+        if booking.renter != renter {
+            return Err(ContractError::UnauthorizedRenter);
+        }
+        if booking.state != BookingState::PendingFunding {
+            return Err(ContractError::InvalidBookingState);
+        }
+
+        renter.require_auth();
+        booking.state = BookingState::Cancelled;
+        env.storage().persistent().set(&key, &booking);
+        Ok(())
     }
 
     pub fn fund_booking(

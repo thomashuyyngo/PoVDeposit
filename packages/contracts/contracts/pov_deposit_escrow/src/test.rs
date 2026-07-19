@@ -43,6 +43,24 @@ fn creates_a_booking_pending_deposit_funding() {
 }
 
 #[test]
+fn lets_the_renter_cancel_before_funding() {
+    let env = Env::default();
+    let contract_id = env.register(PovDepositEscrow, ());
+    let client = PovDepositEscrowClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    let arbitrator = Address::generate(&env);
+    let renter = Address::generate(&env);
+    let host = Address::generate(&env);
+
+    env.mock_all_auths();
+    client.initialize(&admin, &arbitrator, &Address::generate(&env));
+    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
+    client.cancel_booking(&renter, &booking_id);
+
+    assert_eq!(client.booking(&booking_id).state, BookingState::Cancelled);
+}
+
+#[test]
 fn funds_a_pending_booking_with_the_configured_asset() {
     let env = Env::default();
     let contract_id = env.register(PovDepositEscrow, ());
