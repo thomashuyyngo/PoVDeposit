@@ -9,6 +9,13 @@ test("rejects an incomplete booking request", () => {
   });
 });
 
+test("rejects a booking where renter and host are the same wallet", () => {
+  assert.deepEqual(createBookingIntent({ renter: "GSAME", host: "GSAME", deposit: 1 }), {
+    status: 422,
+    body: { error: "renter and host must be different" },
+  });
+});
+
 test("creates a pending-funding booking intent", () => {
   const result = createBookingIntent({ renter: "GRENT", host: "GHOST", deposit: 500_000_000 });
 

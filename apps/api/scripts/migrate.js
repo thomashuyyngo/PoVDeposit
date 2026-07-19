@@ -44,6 +44,12 @@ await pool.query(`
     state TEXT NOT NULL DEFAULT 'PENDING_FUNDING' CHECK (state = 'PENDING_FUNDING'),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  DO $$ BEGIN
+    ALTER TABLE booking_intents
+      ADD CONSTRAINT booking_intents_distinct_parties
+      CHECK (renter_wallet <> host_wallet);
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
   CREATE TABLE IF NOT EXISTS booking_events (
     id BIGSERIAL PRIMARY KEY,
     contract_booking_id BIGINT NOT NULL REFERENCES bookings(contract_booking_id),

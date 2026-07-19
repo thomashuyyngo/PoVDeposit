@@ -5,6 +5,12 @@ export function createBookingIntent({ renter, host, deposit }) {
       body: { error: "renter, host, and positive deposit are required" },
     };
   }
+  if (renter === host) {
+    return {
+      status: 422,
+      body: { error: "renter and host must be different" },
+    };
+  }
 
   return {
     status: 201,
