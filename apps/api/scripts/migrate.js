@@ -36,6 +36,14 @@ await pool.query(`
     state TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  CREATE TABLE IF NOT EXISTS booking_intents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    renter_wallet TEXT NOT NULL,
+    host_wallet TEXT NOT NULL,
+    deposit_atomic BIGINT NOT NULL CHECK (deposit_atomic > 0),
+    state TEXT NOT NULL DEFAULT 'PENDING_FUNDING' CHECK (state = 'PENDING_FUNDING'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
   CREATE TABLE IF NOT EXISTS booking_events (
     id BIGSERIAL PRIMARY KEY,
     contract_booking_id BIGINT NOT NULL REFERENCES bookings(contract_booking_id),

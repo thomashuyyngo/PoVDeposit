@@ -8,7 +8,7 @@ The escrow contract is deployed and initialized on Stellar Testnet. Mainnet depl
 
 ## Railway deployment
 
-Railway successfully deployed the current `development` revision on 2026-07-19. The service is configured to run `pnpm start`, exposes `/health`, and applies the Neon schema with `pnpm migrate`. [Railway deployment dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6)
+Railway successfully deployed the current `development` revision on 2026-07-19. The service runs `pnpm migrate && pnpm seed && pnpm start`, exposes `/health`, and uses Neon PostgreSQL. [Railway deployment dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6)
 
 ## Testnet deployment
 
@@ -22,10 +22,9 @@ Railway successfully deployed the current `development` revision on 2026-07-19. 
 ## Workspace
 
 - `apps/web` — renter, host, admin, and arbitrator experiences
-- `apps/api` — booking, evidence, notification, QR, and contract-sync API
+- `apps/api` — booking-intent and health API
 - `packages/contracts` — Soroban visit-deposit escrow
-- `packages/stellar` — wallet and contract utilities
-- `docs` — product, security, deployment, and evidence records
+- `docs` — security boundaries and verification records
 
 ## Local checks
 
@@ -35,4 +34,10 @@ Set-Location packages/contracts
 cargo test
 ```
 
-Open `apps/web/index.html` for the current rental-escrow demo. Contract tests cover token funding, host release, and arbitrator refund using the local Soroban host; deployment and wallet integration are not claimed until they are configured and verified on Testnet.
+Open `apps/web/index.html` for the current rental-escrow demo. `POST /api/bookings` persists a pending-funding off-chain intent with its own UUID; it does not claim to create an on-chain booking. Contract tests cover token funding, host release, and arbitrator refund using the local Soroban host; deployment and wallet integration are not claimed until they are configured and verified on Testnet.
+
+## Service configuration
+
+Set `DATABASE_URL` to the managed PostgreSQL connection string. `PORT` is optional and defaults to `3000`. Do not commit database credentials, wallet secrets, or Testnet key material.
+
+See [security boundaries](docs/security.md) and the [verification record](docs/verification.md) for the tested scope and known production gaps.

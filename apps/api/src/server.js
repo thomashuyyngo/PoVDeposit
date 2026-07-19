@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import pg from "pg";
 import { health } from "./health.js";
-import { createBookingIntent } from "./booking.js";
+import { persistBookingIntent } from "./booking.js";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
@@ -24,7 +24,7 @@ createServer(async (request, response) => {
       return response.end(JSON.stringify(health()));
     }
     if (request.method === "POST" && request.url === "/api/bookings") {
-      const result = createBookingIntent(await readJson(request));
+      const result = await persistBookingIntent(pool, await readJson(request));
       response.writeHead(result.status, { "content-type": "application/json" });
       return response.end(JSON.stringify(result.body));
     }
