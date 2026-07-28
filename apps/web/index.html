@@ -23,7 +23,7 @@
   </head>
   <body>
     <header>
-      <small>Viewing-appointment escrow on Stellar Testnet</small>
+      <small>Viewing-appointment escrow on Stellar Mainnet</small>
       <h1>Book the viewing. Keep the deposit fair.</h1>
     </header>
     <main>
@@ -35,9 +35,9 @@
       </section>
       <section>
         <small>02 · Escrow</small>
-        <h2>Fund with a Testnet asset</h2>
+        <h2>Fund with a Mainnet asset</h2>
         <p>Contract state moves to funded only after token transfer succeeds.</p>
-        <button type="button" id="wallet-button">Connect Testnet wallet</button>
+        <button type="button" id="wallet-button">Connect Mainnet wallet</button>
         <p class="wallet-status" id="wallet-status" role="status" aria-live="polite">Choose Freighter or Rabet. Private keys never leave the extension.</p>
       </section>
       <section>
@@ -47,8 +47,8 @@
       </section>
     </main>
     <dialog id="wallet-dialog" aria-labelledby="wallet-title">
-      <h2 id="wallet-title">Connect your Testnet wallet</h2>
-      <p>Freighter is checked for Testnet before connecting. Rabet uses its own signing flow and will be passed Testnet for each transaction.</p>
+      <h2 id="wallet-title">Connect your Mainnet wallet</h2>
+      <p>Freighter is checked for Mainnet before connecting. Rabet uses its own signing flow and will be passed Mainnet for each transaction.</p>
       <button class="wallet-choice" data-wallet="freighter" type="button"><span>Freighter</span><span id="freighter-state">Checking…</span></button>
       <button class="wallet-choice" data-wallet="rabet" type="button"><span>Rabet</span><span id="rabet-state">Checking…</span></button>
       <button id="wallet-close" type="button">Close</button>
@@ -64,12 +64,12 @@
 
       function render() {
         if (!wallet) {
-          button.textContent = "Connect Testnet wallet";
+          button.textContent = "Connect Mainnet wallet";
           status.textContent = "Choose Freighter or Rabet. Private keys never leave the extension.";
           return;
         }
         button.textContent = `${wallet.kind === "freighter" ? "Freighter" : "Rabet"}: ${abbreviateAddress(wallet.address)}`;
-        status.innerHTML = `Wallet connected for Testnet · <button type="button" id="copy-address">Copy</button> <button type="button" id="disconnect-wallet">Disconnect</button>`;
+        status.innerHTML = `Wallet connected for Mainnet · <button type="button" id="copy-address">Copy</button> <button type="button" id="disconnect-wallet">Disconnect</button>`;
         document.querySelector("#copy-address").onclick = async () => { await navigator.clipboard.writeText(wallet.address); status.firstChild.textContent = "Address copied · "; };
         document.querySelector("#disconnect-wallet").onclick = async () => { await disconnectWallet(wallet.kind); wallet = null; localStorage.removeItem(storageKey); render(); };
       }
@@ -86,7 +86,13 @@
           render();
         } catch (error) { status.textContent = error.message; }
       });
-      try { wallet = JSON.parse(localStorage.getItem(storageKey)); } catch { localStorage.removeItem(storageKey); }
+      try {
+        wallet = JSON.parse(localStorage.getItem(storageKey));
+        if (wallet && !["PUBLIC", "PUBLIC_REQUESTED"].includes(wallet.network)) {
+          wallet = null;
+          localStorage.removeItem(storageKey);
+        }
+      } catch { localStorage.removeItem(storageKey); }
       render();
     </script>
   </body>
