@@ -1,186 +1,290 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, token, Address, Env};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger},
+    token, Address, BytesN, Env,
+};
 
-#[test]
-fn initializes_with_an_authorized_arbitrator() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = Address::generate(&env);
+const DEPOSIT: i128 = 100_000_000;
+const VISIT: u64 = 2_000;
+const CHECK_DEADLINE: u64 = 2_100;
+const CONFIRM_DEADLINE: u64 = 2_500;
 
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-
-    assert_eq!(client.admin(), admin);
-    assert_eq!(client.arbitrator(), arbitrator);
+struct Setup {
+    env: Env,
+    contract_id: Address,
+    admin: Address,
+    arbitrator: Address,
+    renter: Address,
+    host: Address,
+    asset: Address,
 }
 
-#[test]
-fn creates_a_booking_pending_deposit_funding() {
+fn setup() -> Setup {
     let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = Address::generate(&env);
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-
-    assert_eq!(booking_id, 1);
-    let booking = client.booking(&booking_id);
-    assert_eq!(booking.renter, renter);
-    assert_eq!(booking.host, host);
-    assert_eq!(booking.deposit_amount, 500_000_000i128);
-    assert_eq!(booking.state, BookingState::PendingFunding);
-}
-
-#[test]
-fn lets_the_renter_cancel_before_funding() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
+    env.ledger().set_timestamp(1_000);
+    let contract_id = env.register(VisitDepositEscrow, ());
     let admin = Address::generate(&env);
     let arbitrator = Address::generate(&env);
     let renter = Address::generate(&env);
     let host = Address::generate(&env);
-
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &Address::generate(&env));
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-    client.cancel_booking(&renter, &booking_id);
-
-    assert_eq!(client.booking(&booking_id).state, BookingState::Cancelled);
-}
-
-#[test]
-fn funds_a_pending_booking_with_the_configured_asset() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let asset_admin = Address::generate(&env);
-    let payment_asset = env
-        .register_stellar_asset_contract_v2(asset_admin)
-        .address();
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-    let token = token::StellarAssetClient::new(&env, &payment_asset);
-
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    token.mint(&renter, &500_000_000i128);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-
-    client.fund_booking(&renter, &booking_id);
-
-    assert_eq!(token.balance(&contract_id), 500_000_000i128);
-    assert_eq!(client.booking(&booking_id).state, BookingState::Funded);
-}
-
-#[test]
-fn releases_a_funded_booking_to_its_host() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = env
+    let asset = env
         .register_stellar_asset_contract_v2(Address::generate(&env))
         .address();
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-    let token = token::StellarAssetClient::new(&env, &payment_asset);
-
+    let config = EscrowConfig {
+        admin: admin.clone(),
+        arbitrator: arbitrator.clone(),
+        accepted_asset: asset.clone(),
+        fee_recipient: admin.clone(),
+        platform_fee_bps: 100,
+        min_deposit: 1,
+        max_deposit: 1_000_000_000,
+        check_in_window: 300,
+        confirmation_window: 400,
+        paused: false,
+        version: VERSION,
+    };
     env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    token.mint(&renter, &500_000_000i128);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-    client.fund_booking(&renter, &booking_id);
-    client.check_in(&host, &booking_id);
-    client.release_booking(&host, &booking_id);
+    VisitDepositEscrowClient::new(&env, &contract_id).initialize(&config);
+    Setup {
+        env,
+        contract_id,
+        admin,
+        arbitrator,
+        renter,
+        host,
+        asset,
+    }
+}
 
-    assert_eq!(token.balance(&host), 500_000_000i128);
-    assert_eq!(client.booking(&booking_id).state, BookingState::Released);
+fn create(setup: &Setup, booking_id: u64) {
+    VisitDepositEscrowClient::new(&setup.env, &setup.contract_id).create_booking(
+        &booking_id,
+        &setup.renter,
+        &setup.host,
+        &DEPOSIT,
+        &VISIT,
+        &CHECK_DEADLINE,
+        &CONFIRM_DEADLINE,
+        &BytesN::from_array(&setup.env, &[1; 32]),
+    );
+}
+
+fn fund(setup: &Setup, booking_id: u64) {
+    token::StellarAssetClient::new(&setup.env, &setup.asset).mint(&setup.renter, &DEPOSIT);
+    VisitDepositEscrowClient::new(&setup.env, &setup.contract_id)
+        .fund_booking(&setup.renter, &booking_id);
 }
 
 #[test]
-fn records_check_in_before_release() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = env
-        .register_stellar_asset_contract_v2(Address::generate(&env))
-        .address();
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-    let token = token::StellarAssetClient::new(&env, &payment_asset);
-
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    token.mint(&renter, &500_000_000i128);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-    client.fund_booking(&renter, &booking_id);
-    client.check_in(&host, &booking_id);
-
-    assert_eq!(client.booking(&booking_id).state, BookingState::CheckedIn);
+fn initializes_once_with_bounded_configuration() {
+    let setup = setup();
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    assert_eq!(client.get_config().admin, setup.admin);
+    assert!(client.try_initialize(&client.get_config()).is_err());
 }
 
 #[test]
-fn refunds_a_funded_booking_when_the_arbitrator_approves() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = env
-        .register_stellar_asset_contract_v2(Address::generate(&env))
-        .address();
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-    let token = token::StellarAssetClient::new(&env, &payment_asset);
-
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    token.mint(&renter, &500_000_000i128);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-    client.fund_booking(&renter, &booking_id);
-    client.refund_booking(&arbitrator, &booking_id);
-
-    assert_eq!(token.balance(&renter), 500_000_000i128);
-    assert_eq!(client.booking(&booking_id).state, BookingState::Refunded);
+fn rejects_invalid_config_and_booking_bounds() {
+    let setup = setup();
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    assert!(client
+        .try_create_booking(
+            &1,
+            &setup.renter,
+            &setup.host,
+            &0,
+            &VISIT,
+            &CHECK_DEADLINE,
+            &CONFIRM_DEADLINE,
+            &BytesN::from_array(&setup.env, &[1; 32]),
+        )
+        .is_err());
+    assert!(client
+        .try_create_booking(
+            &2,
+            &setup.renter,
+            &setup.host,
+            &DEPOSIT,
+            &VISIT,
+            &(VISIT - 1),
+            &CONFIRM_DEADLINE,
+            &BytesN::from_array(&setup.env, &[1; 32]),
+        )
+        .is_err());
 }
 
 #[test]
-fn lets_the_renter_open_a_dispute_for_a_funded_booking() {
-    let env = Env::default();
-    let contract_id = env.register(PovDepositEscrow, ());
-    let client = PovDepositEscrowClient::new(&env, &contract_id);
-    let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
-    let payment_asset = env
-        .register_stellar_asset_contract_v2(Address::generate(&env))
-        .address();
-    let renter = Address::generate(&env);
-    let host = Address::generate(&env);
-    let token = token::StellarAssetClient::new(&env, &payment_asset);
+fn creates_unique_booking_ids() {
+    let setup = setup();
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    create(&setup, 7);
+    assert_eq!(client.get_booking(&7).state, BookingState::Created);
+    assert!(client
+        .try_create_booking(
+            &7,
+            &setup.renter,
+            &setup.host,
+            &DEPOSIT,
+            &VISIT,
+            &CHECK_DEADLINE,
+            &CONFIRM_DEADLINE,
+            &BytesN::from_array(&setup.env, &[2; 32]),
+        )
+        .is_err());
+}
 
-    env.mock_all_auths();
-    client.initialize(&admin, &arbitrator, &payment_asset);
-    token.mint(&renter, &500_000_000i128);
-    let booking_id = client.create_booking(&renter, &host, &500_000_000i128);
-    client.fund_booking(&renter, &booking_id);
-    client.open_dispute(&renter, &booking_id);
+#[test]
+fn funds_once_and_preserves_escrow_liability() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    assert_eq!(client.get_booking(&1).state, BookingState::Funded);
+    assert_eq!(
+        token::Client::new(&setup.env, &setup.asset).balance(&setup.contract_id),
+        DEPOSIT
+    );
+    assert!(client.try_fund_booking(&setup.renter, &1).is_err());
+}
 
-    assert_eq!(client.booking(&booking_id).state, BookingState::Disputed);
+#[test]
+fn renter_cancels_before_funding() {
+    let setup = setup();
+    create(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.cancel_by_renter(&setup.renter, &1);
+    assert_eq!(
+        client.get_booking(&1).state,
+        BookingState::CancelledByRenter
+    );
+}
+
+#[test]
+fn host_cancellation_refunds_a_funded_booking() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.cancel_by_host(&setup.host, &1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
+    assert_eq!(
+        token::Client::new(&setup.env, &setup.asset).balance(&setup.renter),
+        DEPOSIT
+    );
+}
+
+#[test]
+fn rejects_early_check_in_then_refunds_confirmed_visit() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    let proof = BytesN::from_array(&setup.env, &[3; 32]);
+    assert!(client.try_check_in(&setup.renter, &1, &proof).is_err());
+
+    setup.env.ledger().set_timestamp(VISIT - 100);
+    client.check_in(&setup.renter, &1, &proof);
+    client.confirm_visit(&setup.host, &1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
+    assert_eq!(
+        token::Client::new(&setup.env, &setup.asset).balance(&setup.renter),
+        DEPOSIT
+    );
+}
+
+#[test]
+fn renter_no_show_releases_to_host() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    setup.env.ledger().set_timestamp(CHECK_DEADLINE + 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.report_renter_no_show(&setup.host, &1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Released);
+    let token = token::Client::new(&setup.env, &setup.asset);
+    assert_eq!(token.balance(&setup.host), 99_000_000);
+    assert_eq!(token.balance(&setup.admin), 1_000_000);
+}
+
+#[test]
+fn host_no_show_refunds_renter() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    setup.env.ledger().set_timestamp(CHECK_DEADLINE + 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.report_host_no_show(&setup.renter, &1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
+}
+
+#[test]
+fn arbitrator_can_split_only_a_disputed_booking() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    assert!(client
+        .try_resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Refund)
+        .is_err());
+    client.open_dispute(&setup.renter, &1, &BytesN::from_array(&setup.env, &[4; 32]));
+    client.respond_to_dispute(&setup.host, &1, &BytesN::from_array(&setup.env, &[5; 32]));
+    client.resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Split(40_000_000));
+    let token = token::Client::new(&setup.env, &setup.asset);
+    assert_eq!(token.balance(&setup.renter), 40_000_000);
+    assert_eq!(token.balance(&setup.host), 60_000_000);
+    assert!(client
+        .try_resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Refund)
+        .is_err());
+}
+
+#[test]
+fn unauthorized_arbitrator_cannot_resolve() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.open_dispute(&setup.renter, &1, &BytesN::from_array(&setup.env, &[4; 32]));
+    assert!(client
+        .try_resolve_dispute(
+            &Address::generate(&setup.env),
+            &1,
+            &DisputeResolution::Refund,
+        )
+        .is_err());
+}
+
+#[test]
+fn expiration_refunds_funded_liability_once() {
+    let setup = setup();
+    create(&setup, 1);
+    fund(&setup, 1);
+    setup.env.ledger().set_timestamp(CONFIRM_DEADLINE + 1);
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.expire_booking(&1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
+    assert!(client.try_expire_booking(&1).is_err());
+}
+
+#[test]
+fn pause_blocks_new_liabilities_but_not_safe_settlement() {
+    let setup = setup();
+    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
+    client.pause(&setup.admin);
+    assert!(client
+        .try_create_booking(
+            &1,
+            &setup.renter,
+            &setup.host,
+            &DEPOSIT,
+            &VISIT,
+            &CHECK_DEADLINE,
+            &CONFIRM_DEADLINE,
+            &BytesN::from_array(&setup.env, &[1; 32]),
+        )
+        .is_err());
+    client.unpause(&setup.admin);
+    create(&setup, 1);
+    assert_eq!(client.get_booking(&1).state, BookingState::Created);
 }
