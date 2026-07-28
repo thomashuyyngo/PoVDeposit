@@ -27,3 +27,14 @@ test("rejects Freighter when it reports Testnet", async () => {
     } },
   }), /Switch Freighter/);
 });
+
+test("uses the official browser global without transforming SDK exports", async () => {
+  const wallet = await connectWallet("freighter", {
+    freighterApi: {
+      isConnected: async () => ({ isConnected: true }),
+      requestAccess: async () => ({ address: "GBROWSER" }),
+      getNetwork: async () => ({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
+    },
+  });
+  assert.equal(wallet.address, "GBROWSER");
+});

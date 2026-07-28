@@ -1,6 +1,4 @@
 export const MAINNET_PASSPHRASE = "Public Global Stellar Network ; September 2015";
-export const FREIGHTER_SDK_URL = "https://cdn.jsdelivr.net/npm/@stellar/freighter-api@6.0.1/+esm";
-
 const message = (value) => typeof value === "string" ? value : value?.message || "Wallet request failed";
 
 export function abbreviateAddress(address) {
@@ -12,8 +10,8 @@ export function isMainnet(network) {
 }
 
 async function freighter(scope) {
-  const module = scope.__freighterSdk || await import(FREIGHTER_SDK_URL);
-  const api = module.freighterApi || module.default?.freighterApi || module;
+  const api = scope.__freighterSdk?.freighterApi || scope.__freighterSdk || scope.freighterApi;
+  if (!api) throw new Error("Freighter browser API did not load");
   if (typeof api.isConnected !== "function" || typeof api.requestAccess !== "function") {
     throw new Error("Freighter SDK did not load correctly");
   }

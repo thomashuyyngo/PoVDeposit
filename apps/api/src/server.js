@@ -11,6 +11,7 @@ const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const webDir = join(dirname(fileURLToPath(import.meta.url)), "../../web");
 const webRoot = join(webDir, "index.html");
+const freighterApiPath = fileURLToPath(import.meta.resolve("@stellar/freighter-api"));
 
 createServer(async (request, response) => {
   try {
@@ -27,6 +28,10 @@ createServer(async (request, response) => {
     if (request.url === "/wallet.js") {
       response.writeHead(200, { "content-type": "text/javascript; charset=utf-8" });
       return response.end(await readFile(join(webDir, "wallet.js")));
+    }
+    if (request.url === "/freighter-api.js") {
+      response.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=31536000, immutable" });
+      return response.end(await readFile(freighterApiPath));
     }
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     return response.end(await readFile(webRoot));
