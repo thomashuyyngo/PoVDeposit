@@ -6,6 +6,7 @@ import { ALLOWED_ORIGINS, WalletAuthService } from "./auth/wallet-auth.service.j
 import { BookingController } from "./booking/booking.controller.js";
 import { BookingWorkflowService } from "./booking/booking-workflow.service.js";
 import { CHECKIN_SECRET, CheckInChallengeService } from "./checkin/check-in-challenge.service.js";
+import { checkInSecret } from "./config/secrets.js";
 import { ViewingSlotService } from "./property/viewing-slot.service.js";
 
 @Module({
@@ -24,9 +25,7 @@ import { ViewingSlotService } from "./property/viewing-slot.service.js";
     },
     {
       provide: CHECKIN_SECRET,
-      useFactory: () => Buffer.from(
-        process.env.CHECKIN_TOKEN_SECRET || process.env.SESSION_SECRET || "development-only-checkin-secret",
-      ),
+      useFactory: () => checkInSecret(process.env),
     },
   ],
 })
