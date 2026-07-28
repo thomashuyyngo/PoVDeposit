@@ -5,8 +5,11 @@ on:
   push:
     branches: [development]
 
+permissions:
+  contents: read
+
 jobs:
-  app:
+  application:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +22,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm audit --audit-level high
+      - run: pnpm --filter @pov-deposit/web exec playwright install --with-deps chromium
+      - run: PORT=3108 CHECKIN_TOKEN_SECRET=ci-only-secret pnpm start &
+      - run: |
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:3108/health && exit 0
+            sleep 1
+          done
+          exit 1
+      - run: pnpm --filter @pov-deposit/web exec playwright test
 
   contract:
     runs-on: ubuntu-latest
@@ -26,7 +41,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
+          targets: wasm32v1-none
           components: clippy,rustfmt
       - run: cargo fmt --manifest-path packages/contracts/Cargo.toml --check
       - run: cargo clippy --manifest-path packages/contracts/Cargo.toml -- -D warnings
       - run: cargo test --manifest-path packages/contracts/Cargo.toml
+      - run: cargo build --manifest-path packages/contracts/Cargo.toml --target wasm32v1-none --release
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
