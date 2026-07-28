@@ -4,12 +4,12 @@
   "type": "module",
   "packageManager": "pnpm@10.18.3",
   "scripts": {
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test && node --test apps/web/*.test.js",
+    "lint": "corepack pnpm -r lint",
+    "typecheck": "corepack pnpm -r typecheck",
+    "test": "corepack pnpm -r test && node --test apps/web/*.test.js",
     "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml",
-    "start": "pnpm --filter @pov-deposit/api start",
-    "migrate": "pnpm --filter @pov-deposit/api migrate",
-    "seed": "pnpm --filter @pov-deposit/api seed"
+    "start": "corepack pnpm --filter @pov-deposit/api start",
+    "migrate": "corepack pnpm --filter @pov-deposit/api migrate",
+    "seed": "corepack pnpm --filter @pov-deposit/api seed"
   }
 }
