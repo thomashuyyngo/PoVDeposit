@@ -29,6 +29,10 @@ createServer(async (request, response) => {
       response.writeHead(200, { "content-type": "text/javascript; charset=utf-8" });
       return response.end(await readFile(join(webDir, "wallet.js")));
     }
+    if (request.url === "/app.js") {
+      response.writeHead(200, { "content-type": "text/javascript; charset=utf-8" });
+      return response.end(await readFile(join(webDir, "app.js")));
+    }
     if (request.url === "/freighter-api.js") {
       response.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=31536000, immutable" });
       return response.end(await readFile(freighterApiPath));
