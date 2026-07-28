@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { BookingWorkflowService } from "./booking-workflow.service.js";
+import { ContractTransactionVerifier } from "../stellar/contract-transaction-verifier.js";
 
 const createInput = z.object({
   listingId: z.string().min(1).max(100),
@@ -22,7 +23,10 @@ const actorProofInput = z.object({
 
 @Controller("api/bookings")
 export class BookingController {
-  constructor(private readonly bookings: BookingWorkflowService) {}
+  constructor(
+    private readonly bookings: BookingWorkflowService,
+    private readonly transactions: ContractTransactionVerifier,
+  ) {}
 
   @Post()
   create(@Body() body: unknown) {
@@ -44,8 +48,10 @@ export class BookingController {
   }
 
   @Post(":id/fund")
-  fund(@Param("id") id: string, @Body() body: unknown) {
+  async fund(@Param("id") id: string, @Body() body: unknown) {
     const input = transactionInput.parse(body);
+    const booking = this.bookings.get(id);
+    await this.transactions.verifyFunding(input.transactionHash, booking.id);
     return this.serialize(this.bookings.fund(id, input.transactionHash));
   }
 

@@ -11,6 +11,8 @@ import { PrismaService } from "./database/prisma.service.js";
 import { ViewingSlotService } from "./property/viewing-slot.service.js";
 import { PropertyController } from "./property/property.controller.js";
 import { PropertyService } from "./property/property.service.js";
+import { rpc } from "@stellar/stellar-sdk";
+import { ContractTransactionVerifier, STELLAR_RPC } from "./stellar/contract-transaction-verifier.js";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -22,6 +24,13 @@ import { PropertyService } from "./property/property.service.js";
     WalletAuthService,
     PrismaService,
     PropertyService,
+    ContractTransactionVerifier,
+    {
+      provide: STELLAR_RPC,
+      useFactory: () => new rpc.Server(
+        process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org",
+      ),
+    },
     {
       provide: ALLOWED_ORIGINS,
       useFactory: () => (process.env.PUBLIC_ORIGIN || "http://localhost:3000")
