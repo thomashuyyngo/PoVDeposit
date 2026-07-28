@@ -7,6 +7,7 @@ import { BookingController } from "./booking/booking.controller.js";
 import { BookingWorkflowService } from "./booking/booking-workflow.service.js";
 import { CHECKIN_SECRET, CheckInChallengeService } from "./checkin/check-in-challenge.service.js";
 import { checkInSecret } from "./config/secrets.js";
+import { PrismaService } from "./database/prisma.service.js";
 import { ViewingSlotService } from "./property/viewing-slot.service.js";
 
 @Module({
@@ -17,6 +18,7 @@ import { ViewingSlotService } from "./property/viewing-slot.service.js";
     CheckInChallengeService,
     ViewingSlotService,
     WalletAuthService,
+    PrismaService,
     {
       provide: ALLOWED_ORIGINS,
       useFactory: () => (process.env.PUBLIC_ORIGIN || "http://localhost:3000")

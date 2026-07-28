@@ -14,24 +14,24 @@ export class AuthController {
   constructor(private readonly auth: WalletAuthService) {}
 
   @Post("challenge")
-  challenge(@Headers("origin") origin: string | undefined, @Body() body: unknown) {
+  async challenge(@Headers("origin") origin: string | undefined, @Body() body: unknown) {
     if (!origin) throw new BadRequestException("Origin header required");
     const input = challengeInput.safeParse(body);
     if (!input.success) throw new BadRequestException("Invalid challenge request");
     try {
-      return this.auth.issue(input.data.address, origin);
+      return await this.auth.issue(input.data.address, origin);
     } catch (error) {
       throw new BadRequestException(error instanceof Error ? error.message : "Challenge rejected");
     }
   }
 
   @Post("verify")
-  verify(@Headers("origin") origin: string | undefined, @Body() body: unknown) {
+  async verify(@Headers("origin") origin: string | undefined, @Body() body: unknown) {
     if (!origin) throw new BadRequestException("Origin header required");
     const input = verifyInput.safeParse(body);
     if (!input.success) throw new BadRequestException("Invalid verification request");
     try {
-      return this.auth.verify({ ...input.data, origin });
+      return await this.auth.verify({ ...input.data, origin });
     } catch (error) {
       throw new BadRequestException(error instanceof Error ? error.message : "Signature rejected");
     }

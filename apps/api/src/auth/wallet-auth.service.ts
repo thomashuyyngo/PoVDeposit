@@ -1,6 +1,7 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { Keypair } from "@stellar/stellar-sdk";
+import { PrismaService } from "../database/prisma.service.js";
 
 type Challenge = {
   id: string;
@@ -21,9 +22,10 @@ export class WalletAuthService {
   constructor(
     @Optional() @Inject(AUTH_CLOCK) private readonly now: () => Date = () => new Date(),
     @Optional() @Inject(ALLOWED_ORIGINS) private readonly origins: string[] = [],
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
-  issue(address: string, origin: string) {
+  async issue(address: string, origin: string) {
     if (!this.origins.includes(origin)) throw new Error("Origin not allowed");
     Keypair.fromPublicKey(address);
     const id = randomUUID();
@@ -33,15 +35,48 @@ export class WalletAuthService {
       `Address: ${address}`,
       "Network: TESTNET",
       `Origin: ${origin}`,
-      `Nonce: ${randomBytes(32).toString("hex")}`,
+      `Nonce: ${id}`,
       `Expires: ${expiresAt}`,
     ].join("\n");
     this.challenges.set(id, { id, address, origin, message, expiresAt, used: false });
+    if (this.prisma) {
+      const wallet = await this.prisma.walletIdentity.upsert({
+        where: { address },
+        update: { network: "TESTNET" },
+        create: { address, network: "TESTNET" },
+      });
+      await this.prisma.authChallenge.create({
+        data: {
+          id,
+          walletId: wallet.id,
+          nonceHash: this.hash(id),
+          origin,
+          network: "TESTNET",
+          expiresAt: new Date(expiresAt),
+        },
+      });
+    }
     return { id, message, expiresAt, network: "TESTNET" as const };
   }
 
-  verify(input: { challengeId: string; address: string; origin: string; signature: string }) {
-    const challenge = this.challenges.get(input.challengeId);
+  async verify(input: { challengeId: string; address: string; origin: string; signature: string }) {
+    let challenge = this.challenges.get(input.challengeId);
+    if (!challenge && this.prisma) {
+      const stored = await this.prisma.authChallenge.findUnique({
+        where: { id: input.challengeId },
+        include: { wallet: true },
+      });
+      if (stored) {
+        challenge = {
+          id: stored.id,
+          address: stored.wallet.address,
+          origin: stored.origin,
+          message: this.message(stored.id, stored.wallet.address, stored.origin, stored.expiresAt.toISOString()),
+          expiresAt: stored.expiresAt.toISOString(),
+          used: Boolean(stored.consumedAt),
+        };
+      }
+    }
     if (!challenge) throw new Error("Authentication challenge not found");
     if (challenge.used) throw new Error("Authentication challenge already used");
     if (new Date(challenge.expiresAt) <= this.now()) throw new Error("Authentication challenge expired");
@@ -53,9 +88,39 @@ export class WalletAuthService {
       Buffer.from(input.signature, "base64"),
     )) throw new Error("Invalid wallet signature");
     challenge.used = true;
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(this.now().getTime() + 15 * 60_000);
+    if (this.prisma) {
+      await this.prisma.$transaction(async (database) => {
+        const consumed = await database.authChallenge.updateMany({
+          where: { id: challenge.id, consumedAt: null },
+          data: { consumedAt: this.now() },
+        });
+        if (consumed.count !== 1) throw new Error("Authentication challenge already used");
+        const wallet = await database.walletIdentity.findUniqueOrThrow({ where: { address: input.address } });
+        await database.userSession.create({
+          data: { walletId: wallet.id, tokenHash: this.hash(token), expiresAt },
+        });
+      });
+    }
     return {
-      token: randomBytes(32).toString("hex"),
-      expiresAt: new Date(this.now().getTime() + 15 * 60_000).toISOString(),
+      token,
+      expiresAt: expiresAt.toISOString(),
     };
+  }
+
+  private message(id: string, address: string, origin: string, expiresAt: string) {
+    return [
+      "Proof-of-Visit Deposit authentication",
+      `Address: ${address}`,
+      "Network: TESTNET",
+      `Origin: ${origin}`,
+      `Nonce: ${id}`,
+      `Expires: ${expiresAt}`,
+    ].join("\n");
+  }
+
+  private hash(value: string) {
+    return createHash("sha256").update(value).digest("hex");
   }
 }
