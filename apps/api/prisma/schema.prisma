@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum BookingStatus {
+  PENDING_FUNDING
+  FUNDED
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+  RENTER_NO_SHOW
+  HOST_NO_SHOW
+  DISPUTED
+  REFUNDED
+  RELEASED
+  SPLIT
+  EXPIRED
+}
+
+enum TransactionKind {
+  FUND
+  REFUND
+  RELEASE
+  SPLIT
+}
+
+model WalletIdentity {
+  id                String            @id @default(uuid()) @db.Uuid
+  address           String            @unique
+  network           String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  authChallenges    AuthChallenge[]
+  sessions          UserSession[]
+  profile           UserProfile?
+  hostApplications  HostApplication[]
+  properties        Property[]
+  renterBookings    Booking[]         @relation("RenterBookings")
+  hostBookings      Booking[]         @relation("HostBookings")
+  evidence          EvidenceFile[]
+  notifications     Notification[]
+  feedback          Feedback[]
+}
+
+model AuthChallenge {
+  id          String         @id @default(uuid()) @db.Uuid
+  walletId    String         @db.Uuid
+  wallet      WalletIdentity @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  nonceHash   String         @unique
+  origin      String
+  network     String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([walletId, expiresAt])
+}
+
+model UserSession {
+  id         String         @id @default(uuid()) @db.Uuid
+  walletId   String         @db.Uuid
+  wallet     WalletIdentity @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  tokenHash  String         @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([walletId, expiresAt])
+}
+
+model UserProfile {
+  id          String         @id @default(uuid()) @db.Uuid
+  walletId    String         @unique @db.Uuid
+  wallet      WalletIdentity @relation(fields: [walletId], references: [id])
+  displayName String
+  bio         String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model HostApplication {
+  id          String         @id @default(uuid()) @db.Uuid
+  walletId    String         @db.Uuid
+  wallet      WalletIdentity @relation(fields: [walletId], references: [id])
+  statement   String
+  status      ReviewStatus   @default(PENDING)
+  reviewedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([walletId, status])
+}
+
+model Property {
+  id          String          @id @default(uuid()) @db.Uuid
+  slug        String          @unique
+  hostId      String          @db.Uuid
+  host        WalletIdentity  @relation(fields: [hostId], references: [id])
+  title       String
+  description String
+  district    String
+  addressHash String
+  active      Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  images      PropertyImage[]
+  slots       ViewingSlot[]
+  bookings    Booking[]
+
+  @@index([hostId, active])
+  @@index([district, active])
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid()) @db.Uuid
+  propertyId String   @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url        String
+  altText    String
+  position   Int
+  createdAt  DateTime @default(now())
+
+  @@unique([propertyId, position])
+}
+
+model ViewingSlot {
+  id         String    @id @default(uuid()) @db.Uuid
+  propertyId String    @db.Uuid
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  startsAt   DateTime
+  endsAt     DateTime
+  lockedUntil DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  booking    Booking?
+
+  @@unique([propertyId, startsAt])
+  @@index([propertyId, startsAt, lockedUntil])
+}
+
+model Booking {
+  id               String                 @id @default(uuid()) @db.Uuid
+  onChainBookingId String                 @unique
+  propertyId       String                 @db.Uuid
+  property         Property               @relation(fields: [propertyId], references: [id])
+  slotId           String                 @unique @db.Uuid
+  slot             ViewingSlot            @relation(fields: [slotId], references: [id])
+  renterId         String                 @db.Uuid
+  renter           WalletIdentity         @relation("RenterBookings", fields: [renterId], references: [id])
+  hostId           String                 @db.Uuid
+  host             WalletIdentity         @relation("HostBookings", fields: [hostId], references: [id])
+  depositAmount    BigInt
+  asset            String
+  visitTime        DateTime
+  status           BookingStatus          @default(PENDING_FUNDING)
+  version          Int                    @default(0)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  history          BookingStatusHistory[]
+  transactions     PaymentTransaction[]
+  checkInChallenges CheckInChallenge[]
+  evidence         EvidenceFile[]
+  disputes         Dispute[]
+
+  @@index([status, visitTime])
+  @@index([renterId, status])
+  @@index([hostId, status])
+  @@index([propertyId, visitTime])
+}
+
+model BookingStatusHistory {
+  id        String        @id @default(uuid()) @db.Uuid
+  bookingId String        @db.Uuid
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  from      BookingStatus?
+  to        BookingStatus
+  actor     String
+  txHash    String?
+  createdAt DateTime      @default(now())
+
+  @@index([bookingId, createdAt])
+}
+
+model PaymentTransaction {
+  id          String          @id @default(uuid()) @db.Uuid
+  bookingId   String          @db.Uuid
+  booking     Booking         @relation(fields: [bookingId], references: [id])
+  hash        String          @unique
+  kind        TransactionKind
+  amount      BigInt
+  ledger      Int
+  confirmedAt DateTime
+  createdAt   DateTime        @default(now())
+
+  @@index([bookingId, kind])
+}
+
+model CheckInChallenge {
+  id          String           @id @default(uuid()) @db.Uuid
+  bookingId   String           @db.Uuid
+  booking     Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  nonceHash   String           @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  attempts    CheckInAttempt[]
+
+  @@index([bookingId, expiresAt])
+}
+
+model CheckInAttempt {
+  id          String           @id @default(uuid()) @db.Uuid
+  challengeId String           @db.Uuid
+  challenge   CheckInChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  walletAddress String
+  proofHash   String
+  accepted    Boolean
+  createdAt   DateTime         @default(now())
+
+  @@index([challengeId, createdAt])
+}
+
+model EvidenceFile {
+  id          String         @id @default(uuid()) @db.Uuid
+  bookingId   String         @db.Uuid
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ownerId     String         @db.Uuid
+  owner       WalletIdentity @relation(fields: [ownerId], references: [id])
+  objectKey   String         @unique
+  contentType String
+  sizeBytes   Int
+  sha256      String
+  expiresAt   DateTime
+  createdAt   DateTime       @default(now())
+
+  @@index([bookingId, createdAt])
+  @@index([expiresAt])
+}
+
+model Dispute {
+  id          String              @id @default(uuid()) @db.Uuid
+  bookingId   String              @db.Uuid
+  booking     Booking             @relation(fields: [bookingId], references: [id])
+  openedBy    String
+  reason      String
+  evidenceHash String
+  status      ReviewStatus        @default(PENDING)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  responses   DisputeResponse[]
+  resolution  DisputeResolution?
+
+  @@index([bookingId, status])
+}
+
+model DisputeResponse {
+  id           String   @id @default(uuid()) @db.Uuid
+  disputeId    String   @db.Uuid
+  dispute      Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  responder    String
+  statement    String
+  evidenceHash String?
+  createdAt    DateTime @default(now())
+
+  @@index([disputeId, createdAt])
+}
+
+model DisputeResolution {
+  id            String   @id @default(uuid()) @db.Uuid
+  disputeId     String   @unique @db.Uuid
+  dispute       Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  arbitrator    String
+  outcome       String
+  renterAmount  BigInt
+  hostAmount    BigInt
+  transactionHash String @unique
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String         @id @default(uuid()) @db.Uuid
+  walletId  String         @db.Uuid
+  wallet    WalletIdentity @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([walletId, readAt, createdAt])
+}
+
+model Feedback {
+  id        String         @id @default(uuid()) @db.Uuid
+  walletId  String?        @db.Uuid
+  wallet    WalletIdentity? @relation(fields: [walletId], references: [id])
+  rating    Int
+  message   String
+  createdAt DateTime       @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actor       String
+  action      String
+  subjectType String
+  subjectId   String
+  metadata    Json
+  createdAt   DateTime @default(now())
+
+  @@index([subjectType, subjectId, createdAt])
+  @@index([actor, createdAt])
+}
+
+model ContractSyncCursor {
+  id          String   @id @default(uuid()) @db.Uuid
+  contractId  String   @unique
+  ledger      Int
+  pagingToken String
+  updatedAt   DateTime @updatedAt
+}
