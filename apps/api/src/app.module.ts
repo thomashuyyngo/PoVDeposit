@@ -6,6 +6,7 @@ import { ALLOWED_ORIGINS, WalletAuthService } from "./auth/wallet-auth.service.j
 import { BookingController } from "./booking/booking.controller.js";
 import { BookingWorkflowService } from "./booking/booking-workflow.service.js";
 import { CHECKIN_SECRET, CheckInChallengeService } from "./checkin/check-in-challenge.service.js";
+import { ViewingSlotService } from "./property/viewing-slot.service.js";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -13,6 +14,7 @@ import { CHECKIN_SECRET, CheckInChallengeService } from "./checkin/check-in-chal
   providers: [
     BookingWorkflowService,
     CheckInChallengeService,
+    ViewingSlotService,
     WalletAuthService,
     {
       provide: ALLOWED_ORIGINS,
