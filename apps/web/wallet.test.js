@@ -4,26 +4,26 @@ import { connectWallet } from "./wallet.js";
 
 test("connects Rabet after the extension returns a public key", async () => {
   const wallet = await connectWallet("rabet", { rabet: { connect: async () => ({ publicKey: "GRABET" }) } });
-  assert.deepEqual(wallet, { kind: "rabet", address: "GRABET", signing: "sign", network: "PUBLIC_REQUESTED" });
+  assert.deepEqual(wallet, { kind: "rabet", address: "GRABET", signing: "sign", network: "TESTNET_REQUESTED" });
 });
 
-test("uses the official Freighter SDK on Mainnet", async () => {
+test("uses the official Freighter SDK on Testnet", async () => {
   const wallet = await connectWallet("freighter", {
     __freighterSdk: { freighterApi: {
       isConnected: async () => ({ isConnected: true }),
       requestAccess: async () => ({ address: "GFREIGHTER" }),
-      getNetwork: async () => ({ network: "PUBLIC" }),
+      getNetwork: async () => ({ network: "TESTNET" }),
     } },
   });
-  assert.deepEqual(wallet, { kind: "freighter", address: "GFREIGHTER", signing: "signTransaction", network: "PUBLIC" });
+  assert.deepEqual(wallet, { kind: "freighter", address: "GFREIGHTER", signing: "signTransaction", network: "TESTNET" });
 });
 
-test("rejects Freighter when it reports Testnet", async () => {
+test("rejects Freighter when it reports Mainnet", async () => {
   await assert.rejects(connectWallet("freighter", {
     __freighterSdk: { freighterApi: {
       isConnected: async () => ({ isConnected: true }),
       requestAccess: async () => ({ address: "GFREIGHTER" }),
-      getNetwork: async () => ({ network: "TESTNET" }),
+      getNetwork: async () => ({ network: "PUBLIC" }),
     } },
   }), /Switch Freighter/);
 });
@@ -33,7 +33,7 @@ test("uses the official browser global without transforming SDK exports", async 
     freighterApi: {
       isConnected: async () => ({ isConnected: true }),
       requestAccess: async () => ({ address: "GBROWSER" }),
-      getNetwork: async () => ({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
+      getNetwork: async () => ({ networkPassphrase: "Test SDF Network ; September 2015" }),
     },
   });
   assert.equal(wallet.address, "GBROWSER");
