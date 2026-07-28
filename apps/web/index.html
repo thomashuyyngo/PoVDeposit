@@ -20,6 +20,10 @@
       .wallet-choice { display: flex; justify-content: space-between; gap: 12px; width: 100%; margin: 10px 0; text-align: left; }
       .wallet-status { min-height: 1.5em; color: #637064; }
       small { color: #637064; }
+      .booking-form { grid-column: 1 / -1; display: grid; gap: 14px; }
+      .booking-form label { display: grid; gap: 6px; font-family: system-ui, sans-serif; }
+      .booking-form input { padding: 12px; border: 1px solid #b9ae9a; border-radius: 10px; background: #fff; color: #273528; }
+      .booking-result { min-height: 3rem; margin: 0; padding: 14px; border-radius: 10px; background: #edf3ed; white-space: pre-wrap; overflow-wrap: anywhere; }
     </style>
   </head>
   <body>
@@ -46,6 +50,21 @@
         <h2>Release or refund</h2>
         <p>Host release and arbitrator-approved refund routes are represented in the contract.</p>
       </section>
+      <section class="booking-form">
+        <small>LIVE BOOKING DESK</small>
+        <h2>Create a viewing deposit intent</h2>
+        <label>Renter wallet
+          <input id="renter-wallet" required placeholder="Connect Freighter or enter a Stellar address" />
+        </label>
+        <label>Host wallet
+          <input id="host-wallet" required placeholder="G…" />
+        </label>
+        <label>Deposit (XLM)
+          <input id="deposit-xlm" required type="number" min="0.0000001" step="0.0000001" value="1" />
+        </label>
+        <button id="create-booking" type="button">Create pending booking</button>
+        <pre class="booking-result" id="booking-result" role="status" aria-live="polite">Connect a wallet, enter the host, then create the booking.</pre>
+      </section>
     </main>
     <dialog id="wallet-dialog" aria-labelledby="wallet-title">
       <h2 id="wallet-title">Connect your Mainnet wallet</h2>
@@ -55,12 +74,14 @@
       <button id="wallet-close" type="button">Close</button>
     </dialog>
     <script type="module">
+      import { createBooking } from "/app.js";
       import { abbreviateAddress, connectWallet, disconnectWallet, walletAvailability } from "/wallet.js";
 
       const dialog = document.querySelector("#wallet-dialog");
       const button = document.querySelector("#wallet-button");
       const status = document.querySelector("#wallet-status");
       const storageKey = "povdeposit-wallet";
+      const bookingResult = document.querySelector("#booking-result");
       let wallet = null;
 
       function render() {
@@ -70,6 +91,7 @@
           return;
         }
         button.textContent = `${wallet.kind === "freighter" ? "Freighter" : "Rabet"}: ${abbreviateAddress(wallet.address)}`;
+        document.querySelector("#renter-wallet").value = wallet.address;
         status.innerHTML = `Wallet connected for Mainnet · <button type="button" id="copy-address">Copy</button> <button type="button" id="disconnect-wallet">Disconnect</button>`;
         document.querySelector("#copy-address").onclick = async () => { await navigator.clipboard.writeText(wallet.address); status.firstChild.textContent = "Address copied · "; };
         document.querySelector("#disconnect-wallet").onclick = async () => { await disconnectWallet(wallet.kind); wallet = null; localStorage.removeItem(storageKey); render(); };
@@ -87,6 +109,23 @@
           render();
         } catch (error) { status.textContent = error.message; }
       });
+      document.querySelector("#create-booking").onclick = async () => {
+        const trigger = document.querySelector("#create-booking");
+        trigger.disabled = true;
+        bookingResult.textContent = "Creating booking…";
+        try {
+          const booking = await createBooking({
+            renter: document.querySelector("#renter-wallet").value,
+            host: document.querySelector("#host-wallet").value,
+            depositXlm: document.querySelector("#deposit-xlm").value,
+          });
+          bookingResult.textContent = `Booking ${booking.id}\nState: ${booking.state}\nDeposit: ${(booking.deposit / 10_000_000).toFixed(7)} XLM`;
+        } catch (error) {
+          bookingResult.textContent = `Booking failed: ${error.message}`;
+        } finally {
+          trigger.disabled = false;
+        }
+      };
       try {
         wallet = JSON.parse(localStorage.getItem(storageKey));
         if (wallet && !["PUBLIC", "PUBLIC_REQUESTED"].includes(wallet.network)) {
