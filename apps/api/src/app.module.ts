@@ -9,16 +9,19 @@ import { CHECKIN_SECRET, CheckInChallengeService } from "./checkin/check-in-chal
 import { checkInSecret } from "./config/secrets.js";
 import { PrismaService } from "./database/prisma.service.js";
 import { ViewingSlotService } from "./property/viewing-slot.service.js";
+import { PropertyController } from "./property/property.controller.js";
+import { PropertyService } from "./property/property.service.js";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
-  controllers: [AppController, AuthController, BookingController],
+  controllers: [AppController, AuthController, BookingController, PropertyController],
   providers: [
     BookingWorkflowService,
     CheckInChallengeService,
     ViewingSlotService,
     WalletAuthService,
     PrismaService,
+    PropertyService,
     {
       provide: ALLOWED_ORIGINS,
       useFactory: () => (process.env.PUBLIC_ORIGIN || "http://localhost:3000")
