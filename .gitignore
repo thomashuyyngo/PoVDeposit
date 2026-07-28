@@ -9,4 +9,5 @@ packages/contracts/target/
 *.key
 *.pem
 deployments/testnet.json
+apps/web/freighter-api.js
 *.local
