@@ -1,0 +1,31 @@
+{
+  "name": "@pov-deposit/web",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run lib"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "5.2.2",
+    "@react-three/fiber": "9.6.1",
+    "@stellar/freighter-api": "6.0.1",
+    "@tanstack/react-query": "5.90.21",
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-hook-form": "7.71.1",
+    "three": "0.185.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.184.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
+  }
+}
