@@ -77,6 +77,9 @@ importers:
       '@stellar/freighter-api':
         specifier: 6.0.1
         version: 6.0.1
+      '@stellar/stellar-sdk':
+        specifier: 14.5.0
+        version: 14.5.0
       '@tanstack/react-query':
         specifier: 5.90.21
         version: 5.90.21(react@19.2.8)

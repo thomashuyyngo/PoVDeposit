@@ -4,6 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { nativeToScVal } from "@stellar/stellar-sdk";
+import {
+  bookingArguments,
+  invokeEscrow,
+  type StellarConfig,
+  walletStorageKey,
+} from "../lib/escrow-transaction";
 
 const schema = z.object({
   selection: z.string().min(1, "Choose an available viewing time."),
@@ -41,6 +48,11 @@ export function BookingForm() {
       const property = properties.data?.find((item) => item.id === propertyId);
       const slot = property?.slots.find((item) => item.id === slotId);
       if (!property || !slot) throw new Error("Selected viewing time is no longer available.");
+      const renter = localStorage.getItem(walletStorageKey);
+      if (!renter) throw new Error("Connect Freighter before creating a booking.");
+      if (renter !== fields.renter) throw new Error("Renter address must match the connected Freighter account.");
+      const evidenceHash = await sha256(`${property.id}:${slot.id}:${fields.renter}`);
+      const depositAmount = String(Math.round(fields.depositXlm * 10_000_000));
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -48,14 +60,49 @@ export function BookingForm() {
           listingId: property.slug,
           renter: fields.renter,
           host: property.host.address,
-          depositAmount: String(Math.round(fields.depositXlm * 10_000_000)),
+          depositAmount,
           visitTime: slot.startsAt,
-          evidenceHash: await sha256(`${property.id}:${slot.id}:${fields.renter}`),
+          evidenceHash,
         }),
       });
-      const body = await response.json() as { id?: string; state?: string; error?: string };
-      if (!response.ok) throw new Error(body.error || "Booking request failed.");
-      return body;
+      const body = await response.json() as {
+        id?: string;
+        onChainBookingId?: string;
+        state?: string;
+        error?: string;
+      };
+      if (!response.ok || !body.id || !body.onChainBookingId) {
+        throw new Error(body.error || "Booking request failed.");
+      }
+      const configResponse = await fetch("/api/stellar-config");
+      const config = await configResponse.json() as StellarConfig;
+      if (!configResponse.ok || !config.contractId) throw new Error("Escrow contract is not configured.");
+      const created = await invokeEscrow(config, "create_booking", bookingArguments({
+        bookingId: body.onChainBookingId,
+        renter,
+        host: property.host.address,
+        depositAmount,
+        visitTime: Math.floor(new Date(slot.startsAt).getTime() / 1_000),
+      }), renter);
+      const funded = await invokeEscrow(config, "fund_booking", [
+        nativeToScVal(renter, { type: "address" }),
+        nativeToScVal(BigInt(body.onChainBookingId), { type: "u64" }),
+      ], renter);
+      const fundedResponse = await fetch(`/api/bookings/${body.id}/fund`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ transactionHash: funded.transactionHash }),
+      });
+      if (!fundedResponse.ok) {
+        const failure = await fundedResponse.json() as { message?: string };
+        throw new Error(failure.message || "On-chain funding could not be verified.");
+      }
+      return {
+        ...body,
+        state: "FUNDED",
+        createTransactionHash: created.transactionHash,
+        fundingTransactionHash: funded.transactionHash,
+      };
     },
   });
 
@@ -78,7 +125,13 @@ export function BookingForm() {
       {errors.rulesAccepted && <small role="alert">{errors.rulesAccepted.message}</small>}
       <button className="primary" disabled={mutation.isPending || properties.isLoading} type="submit">{mutation.isPending ? "Creating…" : "Create pending booking"}</button>
       <p className="form-status" role="status" aria-live="polite">
-        {properties.isError ? properties.error.message : mutation.isError ? mutation.error.message : mutation.data ? `Booking ${mutation.data.id} · ${mutation.data.state}` : "No funds move until you review and sign in your wallet."}
+        {properties.isError
+          ? properties.error.message
+          : mutation.isError
+            ? mutation.error.message
+            : mutation.data
+              ? `Booking ${mutation.data.id} · ${mutation.data.state}\nCreate ${mutation.data.createTransactionHash}\nFund ${mutation.data.fundingTransactionHash}`
+              : "No funds move until you review and sign in your wallet."}
       </p>
     </form>
   );

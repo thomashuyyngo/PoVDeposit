@@ -3,6 +3,7 @@
 import { getNetwork, isConnected, requestAccess } from "@stellar/freighter-api";
 import { useEffect, useRef, useState } from "react";
 import { isExpectedNetwork, shortAddress } from "../lib/network";
+import { walletStorageKey } from "../lib/escrow-transaction";
 
 type Rabet = {
   connect?: () => Promise<{ publicKey?: string; error?: string }>;
@@ -14,7 +15,6 @@ declare global {
 }
 
 type WalletSession = { kind: "Freighter" | "Rabet"; address: string };
-const storageKey = "pov-deposit:last-public-wallet";
 const expectedNetwork = (process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET").toUpperCase();
 const networkLabel = expectedNetwork === "PUBLIC" ? "Mainnet" : "Testnet";
 
@@ -24,7 +24,7 @@ export function WalletDialog() {
   const [status, setStatus] = useState(`Choose a wallet. ${networkLabel} is required.`);
 
   useEffect(() => {
-    const address = localStorage.getItem(storageKey);
+    const address = localStorage.getItem(walletStorageKey);
     if (address) setStatus(`Previous public address ${shortAddress(address)}. Reconnect to authorize.`);
   }, []);
 
@@ -49,7 +49,7 @@ export function WalletDialog() {
     setStatus(`Waiting for ${kind}…`);
     try {
       const next = kind === "Freighter" ? await connectFreighter() : await connectRabet();
-      localStorage.setItem(storageKey, next.address);
+      localStorage.setItem(walletStorageKey, next.address);
       setSession(next);
       setStatus(`${next.kind} connected to ${networkLabel}.`);
       dialog.current?.close();
@@ -60,7 +60,7 @@ export function WalletDialog() {
 
   async function disconnect() {
     if (session?.kind === "Rabet") await window.rabet?.disconnect?.();
-    localStorage.removeItem(storageKey);
+    localStorage.removeItem(walletStorageKey);
     setSession(null);
     setStatus("Wallet disconnected.");
   }
