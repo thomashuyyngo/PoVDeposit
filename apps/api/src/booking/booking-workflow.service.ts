@@ -138,6 +138,7 @@ export class BookingWorkflowService {
   async activity() {
     if (!this.prisma) return [...this.bookings.values()].slice(-50).reverse();
     const stored = await this.prisma.booking.findMany({
+      where: { transactions: { some: {} } },
       take: 50,
       orderBy: { updatedAt: "desc" },
       include: {
