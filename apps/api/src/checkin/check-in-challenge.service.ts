@@ -1,5 +1,6 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Inject, Injectable, Optional } from "@nestjs/common";
+import { PrismaService } from "../database/prisma.service.js";
 
 type CheckInPayload = {
   version: 1;
@@ -19,9 +20,10 @@ export class CheckInChallengeService {
   constructor(
     @Optional() @Inject(CHECKIN_CLOCK) private readonly now: () => Date = () => new Date(),
     @Optional() @Inject(CHECKIN_SECRET) private readonly secret: Buffer = randomBytes(32),
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
-  issue(bookingId: string, renter: string) {
+  async issue(bookingId: string, renter: string) {
     const payload: CheckInPayload = {
       version: 1,
       bookingId,
@@ -29,16 +31,29 @@ export class CheckInChallengeService {
       nonce: randomBytes(32).toString("hex"),
       expiresAt: new Date(this.now().getTime() + 2 * 60_000).toISOString(),
     };
+    if (this.prisma) {
+      const booking = await this.prisma.booking.findFirst({
+        where: { id: bookingId, renter: { address: renter } },
+        select: { id: true },
+      });
+      if (!booking) throw new Error("Booking not found for renter");
+      await this.prisma.checkInChallenge.create({
+        data: {
+          bookingId,
+          nonceHash: this.hashNonce(payload.nonce),
+          expiresAt: new Date(payload.expiresAt),
+        },
+      });
+    }
     const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
     return { token: `${encoded}.${this.sign(encoded)}`, payload };
   }
 
-  consume(token: string, bookingId: string, renter: string): CheckInPayload {
+  async consume(token: string, bookingId: string, renter: string): Promise<CheckInPayload> {
     const [encoded, signature, extra] = token.split(".");
     if (!encoded || !signature || extra || !this.validSignature(encoded, signature)) {
       throw new Error("Invalid check-in token");
     }
-    if (this.used.has(token)) throw new Error("Check-in challenge already used");
     let payload: CheckInPayload;
     try {
       payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as CheckInPayload;
@@ -49,8 +64,29 @@ export class CheckInChallengeService {
       throw new Error("Check-in challenge mismatch");
     }
     if (new Date(payload.expiresAt) <= this.now()) throw new Error("Check-in challenge expired");
-    this.used.add(token);
+    if (this.prisma) {
+      await this.prisma.$transaction(async (database) => {
+        const challenge = await database.checkInChallenge.findUnique({
+          where: { nonceHash: this.hashNonce(payload.nonce) },
+        });
+        if (!challenge || challenge.bookingId !== bookingId) throw new Error("Check-in challenge mismatch");
+        if (challenge.consumedAt) throw new Error("Check-in challenge already used");
+        if (challenge.expiresAt <= this.now()) throw new Error("Check-in challenge expired");
+        const consumed = await database.checkInChallenge.updateMany({
+          where: { id: challenge.id, consumedAt: null },
+          data: { consumedAt: this.now() },
+        });
+        if (consumed.count !== 1) throw new Error("Check-in challenge already used");
+      });
+    } else {
+      if (this.used.has(token)) throw new Error("Check-in challenge already used");
+      this.used.add(token);
+    }
     return payload;
+  }
+
+  private hashNonce(nonce: string): string {
+    return createHash("sha256").update(nonce).digest("hex");
   }
 
   private sign(encoded: string): string {
