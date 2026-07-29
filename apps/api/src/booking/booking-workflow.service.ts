@@ -84,8 +84,8 @@ export class BookingWorkflowService {
         }
         const renter = await database.walletIdentity.upsert({
           where: { address: input.renter },
-          update: { network: process.env.STELLAR_NETWORK || "TESTNET" },
-          create: { address: input.renter, network: process.env.STELLAR_NETWORK || "TESTNET" },
+          update: { network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() },
+          create: { address: input.renter, network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() },
           select: { id: true },
         });
         const stored = await database.booking.create({

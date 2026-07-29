@@ -15,7 +15,7 @@ declare global {
 
 type WalletSession = { kind: "Freighter" | "Rabet"; address: string };
 const storageKey = "pov-deposit:last-public-wallet";
-const expectedNetwork = process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET";
+const expectedNetwork = (process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET").toUpperCase();
 const networkLabel = expectedNetwork === "PUBLIC" ? "Mainnet" : "Testnet";
 
 export function WalletDialog() {

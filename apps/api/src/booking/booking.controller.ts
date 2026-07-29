@@ -78,6 +78,6 @@ export class BookingController {
   }
 
   private serialize<T extends { depositAmount: bigint }>(booking: T) {
-    return { ...booking, depositAmount: booking.depositAmount.toString(), network: process.env.STELLAR_NETWORK || "TESTNET" };
+    return { ...booking, depositAmount: booking.depositAmount.toString(), network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() };
   }
 }
