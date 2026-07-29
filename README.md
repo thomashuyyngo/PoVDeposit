@@ -39,11 +39,13 @@ The browser is never authoritative for funding or settlement. The backend accept
 
 - Application: [povdeposit-production.up.railway.app](https://povdeposit-production.up.railway.app/)
 - Health: [ `/health` ](https://povdeposit-production.up.railway.app/health)
-- Historical verified escrow: [`CBO2…I7LF`](https://lab.stellar.org/r/testnet/contract/CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF)
-- Historical deploy transaction: [`8b14ebe6…a2165`](https://stellar.expert/explorer/testnet/tx/8b14ebe648b4fa2402c279ed6e8216afa8c358c9f45e5080e6b7327f050a2165)
-- Historical initialize transaction: [`d66389ea…9fb25`](https://stellar.expert/explorer/testnet/tx/d66389ea801252ca3ce9b3e92fe913e9d38329b3992ba33479e90754f6b9fb25)
+- Current Testnet escrow: [`CAV2…G2JP`](https://lab.stellar.org/r/testnet/contract/CAV2VP3TEG76NZ2D5H2Z67YR6R4JTNU4RB2O7JCJARJEGJFWWXZUG2JP)
+- Wasm/deployment transactions: [`ed432196…c833`](https://stellar.expert/explorer/testnet/tx/ed432196bd0257a618d491259e262004700bf93c3459dbaeb8153efa7dc1c833), [`d60c2338…31bc`](https://stellar.expert/explorer/testnet/tx/d60c2338cb30d1e1a9854c4fbd10d2c0f887a265666d47272374ab6a47a231bc)
+- Initialization transaction: [`894717a6…9ada`](https://stellar.expert/explorer/testnet/tx/894717a657e99d0e5131b5f48888f6141287db8b415d1c3557cc975ea3189ada)
+- Attended/refund settlement: [`bb90a7da…c575`](https://stellar.expert/explorer/testnet/tx/bb90a7da978e3c3baee26ae72821ba21c2b747732cc945c0b7fec76a8d65c575)
+- Dispute/release settlement: [`c85d0bef…4790`](https://stellar.expert/explorer/testnet/tx/c85d0bef690a26c6612edc93c8c862ab127b158249cd8f902725bb043d154790)
 
-The current contract source and optimized Wasm are newer than this historical deployment. Redeploying the current Wasm and recording fresh Freighter/Rabet flows remain required before the current revision is submission-ready.
+Current-source controlled Testnet lifecycles reached final `Refunded` and `Released` states with the expected asset-transfer events. Full artifact, role and transaction metadata is recorded in [`deployments/testnet.json`](deployments/testnet.json).
 
 ## Run locally
 
@@ -82,6 +84,6 @@ Desktop/mobile property and booking screens are captured by Playwright. Submissi
 
 Wallet extensions handle signatures. The application stores public addresses only, rejects the wrong network, hashes one-time challenges, keeps evidence access-controlled and never uses GPS as the sole proof.
 
-Current-source deployment, durable booking/check-in persistence, full contract reconciliation, current Freighter and Rabet smoke tests, 20 consented user flows, an authorized X post and any external audit are still pending. Exact 30 commits cannot be claimed because existing meaningful history already exceeds 30 and has not been rewritten.
+Full contract-event reconciliation across every production controller, current Freighter and Rabet extension smoke tests, 20 consented user flows, an authorized X post and any external audit are still pending. Exact 30 commits cannot be claimed because existing meaningful history already exceeds 30 and has not been rewritten.
 
 Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [security model](docs/security/threat-model.md), [Testnet deployment](docs/deployment/testnet.md) and [submission status](SUBMISSION_STATUS.md).

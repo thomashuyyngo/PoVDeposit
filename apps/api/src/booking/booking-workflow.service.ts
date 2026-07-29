@@ -27,6 +27,7 @@ type CreateBooking = {
 
 type Booking = CreateBooking & {
   id: string;
+  onChainBookingId: string;
   state: BookingState;
   fundingTransactionHash?: string;
   checkInProofHash?: string;
@@ -54,9 +55,11 @@ export class BookingWorkflowService {
     if (new Date(input.visitTime) <= this.now()) throw new Error("Visit time must be in the future");
     if (!/^[a-f0-9]{64}$/i.test(input.evidenceHash)) throw new Error("Invalid evidence hash");
     const timestamp = this.now().toISOString();
+    const id = randomUUID();
     const booking = {
       ...input,
-      id: randomUUID(),
+      id,
+      onChainBookingId: BigInt(`0x${id.replaceAll("-", "").slice(0, 16)}`).toString(),
       state: "PENDING_FUNDING" as const,
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -81,14 +84,14 @@ export class BookingWorkflowService {
         }
         const renter = await database.walletIdentity.upsert({
           where: { address: input.renter },
-          update: { network: "TESTNET" },
-          create: { address: input.renter, network: "TESTNET" },
+          update: { network: process.env.STELLAR_NETWORK || "TESTNET" },
+          create: { address: input.renter, network: process.env.STELLAR_NETWORK || "TESTNET" },
           select: { id: true },
         });
         const stored = await database.booking.create({
           data: {
             id: booking.id,
-            onChainBookingId: booking.id,
+            onChainBookingId: booking.onChainBookingId,
             propertyId: property.id,
             slotId: slot.id,
             renterId: renter.id,
@@ -228,6 +231,7 @@ export class BookingWorkflowService {
 
   private fromDatabase(stored: {
     id: string;
+    onChainBookingId: string;
     property: { slug: string };
     renter: { address: string };
     host: { address: string };
@@ -242,6 +246,7 @@ export class BookingWorkflowService {
   }): Booking {
     return {
       id: stored.id,
+      onChainBookingId: stored.onChainBookingId,
       listingId: stored.property.slug,
       renter: stored.renter.address,
       host: stored.host.address,

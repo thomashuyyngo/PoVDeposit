@@ -4,6 +4,15 @@ export function isTestnet(network: { network?: string; networkPassphrase?: strin
   return network.network === "TESTNET" || network.networkPassphrase === TESTNET_PASSPHRASE;
 }
 
+export function isExpectedNetwork(
+  network: { network?: string; networkPassphrase?: string },
+  expected: string,
+) {
+  return expected === "PUBLIC"
+    ? network.network === "PUBLIC"
+    : isTestnet(network);
+}
+
 export function shortAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }

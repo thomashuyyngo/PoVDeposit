@@ -1,24 +1,25 @@
 # Testnet wallet smoke test
 
-Performed on 2026-07-19 using controlled Stellar CLI Testnet identities. This is controlled QA evidence, not Mainnet-user evidence.
+Performed on 2026-07-29 using controlled Stellar CLI Testnet identities. This is controlled QA evidence, not Mainnet-user or browser-extension evidence.
 
-- Escrow: `CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF`
-- Renter wallet: `GC5QVGZXRTZJZLGXON7PAMYNKQUQDB6VVGBOH7VDHOD3PNDE7S3ER3HQ`
-- Host wallet: `GA6S6JMZEUJI6SWDJJG4KKLYXVHRFHXFJWTIY6MG57G7UEL2YN3N2TME`
-- Booking `2` created: [`d98184cc…d4d0c`](https://stellar.expert/explorer/testnet/tx/d98184cc2bdf02660dbeefb6e86c2eca7a52239e2af9f78110e3f9845c6d4d0c)
-- Deposit funded: [`cc7cf710…0bb6d`](https://stellar.expert/explorer/testnet/tx/cc7cf710e95950d3e12896eda8872701e232a2c5e342851e5df2f492b890bb6d)
-- Host check-in: [`3048db18…82f6b`](https://stellar.expert/explorer/testnet/tx/3048db182ae57860961c3fbab0a0e1f3730b03f81c6a5acf27542b2227182f6b)
-- Host release: [`ccb32ab0…dfe9a`](https://stellar.expert/explorer/testnet/tx/ccb32ab0ff9b5a1ccbec0a304ec113ee143c4a8f965f7d4775af8db2a75dfe9a)
+- Current escrow: [`CAV2…G2JP`](https://lab.stellar.org/r/testnet/contract/CAV2VP3TEG76NZ2D5H2Z67YR6R4JTNU4RB2O7JCJARJEGJFWWXZUG2JP)
+- Renter: `GDVZV6CYHCXLGEEW6OLNCBPTSE7NIBSF7YBRM4UTX7YHO4SZG4B7B6B7`
+- Host: `GCT6YVSCRBAISRVZQVEWSMKTS6RGG3JAZHJVZZKN6TQML6JZGAS2ZTQE`
+- Booking `1785298168` created: [`57077b82…643b`](https://stellar.expert/explorer/testnet/tx/57077b8246215fa9ac37f20c95ab5edf6808e99b28e502e3a29d7490df76643b)
+- Deposit funded: [`c78dba2e…a736`](https://stellar.expert/explorer/testnet/tx/c78dba2e7d040a413199cf12607fefe8815335fad1b66a68f72a601d35d7a736)
+- Renter check-in: [`bf5da81d…9d7b`](https://stellar.expert/explorer/testnet/tx/bf5da81d046972df90e159d6734de01697d261be10f1a42f0c7fc95e6a729d7b)
+- Host confirmation and refund: [`bb90a7da…c575`](https://stellar.expert/explorer/testnet/tx/bb90a7da978e3c3baee26ae72821ba21c2b747732cc945c0b7fec76a8d65c575)
 
-The Testnet RPC readback after release returned booking state `Released`.
+RPC readback returned final state `Refunded`; the asset event returned all `1,000,000` stroops to the renter.
 
 ## Dispute and refund
 
-The same controlled renter created booking `3` with the same host, then completed the dispute path with the configured arbitrator.
+The same controlled renter created booking `1785298249`, funded it and opened a dispute. The host responded and the configured arbitrator selected `Release`.
 
-- Booking created: [`90ae5197…f50dc`](https://stellar.expert/explorer/testnet/tx/90ae51973e5289ff7cf1caef5a5c9af46cf918decd9c820e93eb3852185f50dc)
-- Deposit funded: [`d428938e…8947d`](https://stellar.expert/explorer/testnet/tx/d428938e05090a7b6cb98772d61b7d9eb922ebdd2f2707777e83fcfa49f8947d)
-- Renter opened dispute: [`eea699f6…b9fb`](https://stellar.expert/explorer/testnet/tx/eea699f60e53e15173240fccce547e66724f45c9c00cfe9c9284900ef8f9b9fb)
-- Configured arbitrator refunded: [`66c88549…e1872`](https://stellar.expert/explorer/testnet/tx/66c88549a085699b4590ec76b57cecc989b05b43e9a457aae1b09e434d4e1872)
+- Booking created: [`f414e07e…467c`](https://stellar.expert/explorer/testnet/tx/f414e07e42004c6b70a3cb0dba92b186941c64888b82aefb7da05eb68d21467c)
+- Deposit funded: [`e3e8653f…c10c`](https://stellar.expert/explorer/testnet/tx/e3e8653fd98e276a314b8a11c568834b65ce40746f212be7d9ca1471f4d1c10c)
+- Renter opened dispute: [`1f82111f…7bf8`](https://stellar.expert/explorer/testnet/tx/1f82111fa490cd36644da6d4bbd092f3ff1b3bac165881b47f9f5dce29f17bf8)
+- Host responded: [`98074965…4e67`](https://stellar.expert/explorer/testnet/tx/9807496556d42dc54fdbaa84a9b11a2accb08a2e55ce652d5c2107c122404e67)
+- Arbitrator released: [`c85d0bef…4790`](https://stellar.expert/explorer/testnet/tx/c85d0bef690a26c6612edc93c8c862ab127b158249cd8f902725bb043d154790)
 
-The Testnet RPC readback after settlement returned booking state `Refunded`.
+RPC readback returned final state `Released`; asset events paid `990,000` stroops to the host and the bounded 1% fee (`10,000` stroops) to the configured fee recipient.

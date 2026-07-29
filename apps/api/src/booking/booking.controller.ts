@@ -19,6 +19,12 @@ const transactionInput = z.object({
 const actorProofInput = z.object({
   actor: z.string().min(1).max(100),
   proofHash: z.string().regex(/^[a-f0-9]{64}$/i),
+  transactionHash: z.string().regex(/^[a-f0-9]{64}$/i),
+}).strict();
+
+const actorTransactionInput = z.object({
+  actor: z.string().min(1).max(100),
+  transactionHash: z.string().regex(/^[a-f0-9]{64}$/i),
 }).strict();
 
 @Controller("api/bookings")
@@ -51,23 +57,27 @@ export class BookingController {
   async fund(@Param("id") id: string, @Body() body: unknown) {
     const input = transactionInput.parse(body);
     const booking = await this.bookings.get(id);
-    const verification = await this.transactions.verifyFunding(input.transactionHash, booking.id);
+    const verification = await this.transactions.verifyFunding(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.fund(id, input.transactionHash, verification));
   }
 
   @Post(":id/check-in")
   async checkIn(@Param("id") id: string, @Body() body: unknown) {
     const input = actorProofInput.parse(body);
+    const booking = await this.bookings.get(id);
+    await this.transactions.verifyCheckIn(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.checkIn(id, input.actor, input.proofHash));
   }
 
   @Post(":id/confirm")
   async confirm(@Param("id") id: string, @Body() body: unknown) {
-    const input = actorProofInput.parse(body);
-    return this.serialize(await this.bookings.confirm(id, input.actor, input.proofHash));
+    const input = actorTransactionInput.parse(body);
+    const booking = await this.bookings.get(id);
+    await this.transactions.verifySettlement(input.transactionHash, booking.onChainBookingId);
+    return this.serialize(await this.bookings.confirm(id, input.actor, input.transactionHash));
   }
 
   private serialize<T extends { depositAmount: bigint }>(booking: T) {
-    return { ...booking, depositAmount: booking.depositAmount.toString(), network: "TESTNET" as const };
+    return { ...booking, depositAmount: booking.depositAmount.toString(), network: process.env.STELLAR_NETWORK || "TESTNET" };
   }
 }

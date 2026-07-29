@@ -9,6 +9,18 @@ export class ContractTransactionVerifier {
   constructor(@Inject(STELLAR_RPC) private readonly server: RpcReader) {}
 
   async verifyFunding(transactionHash: string, bookingId: string) {
+    return this.verifyEvent(transactionHash, bookingId, "booking_funded");
+  }
+
+  async verifyCheckIn(transactionHash: string, bookingId: string) {
+    return this.verifyEvent(transactionHash, bookingId, "renter_checked_in");
+  }
+
+  async verifySettlement(transactionHash: string, bookingId: string) {
+    return this.verifyEvent(transactionHash, bookingId, "visit_confirmed");
+  }
+
+  private async verifyEvent(transactionHash: string, bookingId: string, expectedEvent: string) {
     const contractId = process.env.ESCROW_CONTRACT_ID;
     if (!contractId) throw new Error("ESCROW_CONTRACT_ID is not configured");
     const transaction = await this.server.getTransaction(transactionHash);
@@ -23,9 +35,9 @@ export class ContractTransactionVerifier {
     const matched = events.some((event) => {
       if (!event.inSuccessfulContractCall || event.txHash !== transactionHash) return false;
       const topics = event.topic.map((topic) => scValToNative(topic) as unknown);
-      return topics[0] === "booking_funded" && String(topics[1]) === bookingId;
+      return topics[0] === expectedEvent && String(topics[1]) === bookingId;
     });
-    if (!matched) throw new Error("Transaction does not contain the expected booking_funded event");
+    if (!matched) throw new Error(`Transaction does not contain the expected ${expectedEvent} event`);
     return { ledger: transaction.ledger, confirmedAt: new Date(transaction.createdAt * 1000).toISOString() };
   }
 }

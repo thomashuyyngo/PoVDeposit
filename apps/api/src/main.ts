@@ -26,13 +26,17 @@ async function bootstrap() {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", ...scriptHashes],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'", "https://soroban-testnet.stellar.org", "https://horizon-testnet.stellar.org"],
+        connectSrc: [
+          "'self'",
+          process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org",
+          process.env.STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org",
+        ],
       },
     },
   }));
   const openApi = SwaggerModule.createDocument(app, new DocumentBuilder()
     .setTitle("Proof-of-Visit Deposit API")
-    .setDescription("Stellar Testnet property-viewing escrow API")
+    .setDescription(`Stellar ${process.env.STELLAR_NETWORK || "TESTNET"} property-viewing escrow API`)
     .setVersion("1.0")
     .build());
   SwaggerModule.setup("docs", app, openApi);

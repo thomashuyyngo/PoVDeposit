@@ -15,6 +15,8 @@ describe("BookingWorkflowService", () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
     const created = await service.create(input);
     expect(created.state).toBe("PENDING_FUNDING");
+    expect(created.onChainBookingId).toMatch(/^[1-9]\d{0,19}$/);
+    expect(BigInt(created.onChainBookingId)).toBeLessThanOrEqual(18_446_744_073_709_551_615n);
 
     expect((await service.fund(created.id, "b".repeat(64))).state).toBe("FUNDED");
     expect((await service.checkIn(created.id, input.renter, "c".repeat(64))).state).toBe("CHECKED_IN");
@@ -55,7 +57,7 @@ describe("BookingWorkflowService", () => {
           writes.push(data);
           return {
             id: "booking-01",
-            onChainBookingId: "booking-01",
+            onChainBookingId: "42",
             property: { slug: input.listingId },
             renter: { address: input.renter },
             host: { address: input.host },
@@ -78,9 +80,10 @@ describe("BookingWorkflowService", () => {
 
     await expect(service.create(input)).resolves.toMatchObject({
       id: "booking-01",
+      onChainBookingId: "42",
       listingId: input.listingId,
       state: "PENDING_FUNDING",
     });
-    expect(writes).toHaveLength(1);
+    expect(writes).toMatchObject([{ onChainBookingId: expect.stringMatching(/^[1-9]\d{0,19}$/) }]);
   });
 });
