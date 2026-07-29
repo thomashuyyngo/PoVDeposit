@@ -3,288 +3,71 @@
 use super::*;
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
-    token, Address, BytesN, Env,
+    token, Address, Env,
 };
 
-const DEPOSIT: i128 = 100_000_000;
-const VISIT: u64 = 2_000;
-const CHECK_DEADLINE: u64 = 2_100;
-const CONFIRM_DEADLINE: u64 = 2_500;
-
-struct Setup {
-    env: Env,
-    contract_id: Address,
-    admin: Address,
-    arbitrator: Address,
-    renter: Address,
-    host: Address,
-    asset: Address,
-}
-
-fn setup() -> Setup {
+fn setup() -> (
+    Env,
+    VisitDepositEscrowClient<'static>,
+    token::Client<'static>,
+    Address,
+    Address,
+) {
     let env = Env::default();
+    env.mock_all_auths();
     env.ledger().set_timestamp(1_000);
-    let contract_id = env.register(VisitDepositEscrow, ());
     let admin = Address::generate(&env);
-    let arbitrator = Address::generate(&env);
     let renter = Address::generate(&env);
     let host = Address::generate(&env);
-    let asset = env
-        .register_stellar_asset_contract_v2(Address::generate(&env))
-        .address();
-    let config = EscrowConfig {
-        admin: admin.clone(),
-        arbitrator: arbitrator.clone(),
-        accepted_asset: asset.clone(),
-        fee_recipient: admin.clone(),
-        platform_fee_bps: 100,
-        min_deposit: 1,
-        max_deposit: 1_000_000_000,
-        check_in_window: 300,
-        confirmation_window: 400,
-        paused: false,
-        version: VERSION,
-    };
-    env.mock_all_auths();
-    VisitDepositEscrowClient::new(&env, &contract_id).initialize(&config);
-    Setup {
-        env,
-        contract_id,
-        admin,
-        arbitrator,
-        renter,
-        host,
-        asset,
-    }
-}
-
-fn create(setup: &Setup, booking_id: u64) {
-    VisitDepositEscrowClient::new(&setup.env, &setup.contract_id).create_booking(
-        &booking_id,
-        &setup.renter,
-        &setup.host,
-        &DEPOSIT,
-        &VISIT,
-        &CHECK_DEADLINE,
-        &CONFIRM_DEADLINE,
-        &BytesN::from_array(&setup.env, &[1; 32]),
-    );
-}
-
-fn fund(setup: &Setup, booking_id: u64) {
-    token::StellarAssetClient::new(&setup.env, &setup.asset).mint(&setup.renter, &DEPOSIT);
-    VisitDepositEscrowClient::new(&setup.env, &setup.contract_id)
-        .fund_booking(&setup.renter, &booking_id);
+    let issuer = Address::generate(&env);
+    let asset_id = env.register_stellar_asset_contract_v2(issuer);
+    let asset_admin = token::StellarAssetClient::new(&env, &asset_id.address());
+    let asset = token::Client::new(&env, &asset_id.address());
+    let contract_id = env.register(VisitDepositEscrow, ());
+    let client = VisitDepositEscrowClient::new(&env, &contract_id);
+    client.initialize(&admin, &asset_id.address());
+    asset_admin.mint(&renter, &10_000_000);
+    (env, client, asset, renter, host)
 }
 
 #[test]
-fn initializes_once_with_bounded_configuration() {
-    let setup = setup();
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    assert_eq!(client.get_config().admin, setup.admin);
-    assert!(client.try_initialize(&client.get_config()).is_err());
+fn funds_and_refunds_before_the_visit() {
+    let (_env, client, asset, renter, host) = setup();
+    client.create_booking(&1, &renter, &host, &1_000_000, &2_000);
+    client.fund_booking(&renter, &1);
+    assert_eq!(asset.balance(&renter), 9_000_000);
+    client.cancel_booking(&renter, &1);
+    assert_eq!(asset.balance(&renter), 10_000_000);
+    assert_eq!(client.booking(&1).state, BookingState::Refunded);
 }
 
 #[test]
-fn rejects_invalid_config_and_booking_bounds() {
-    let setup = setup();
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    assert!(client
-        .try_create_booking(
-            &1,
-            &setup.renter,
-            &setup.host,
-            &0,
-            &VISIT,
-            &CHECK_DEADLINE,
-            &CONFIRM_DEADLINE,
-            &BytesN::from_array(&setup.env, &[1; 32]),
-        )
-        .is_err());
-    assert!(client
-        .try_create_booking(
-            &2,
-            &setup.renter,
-            &setup.host,
-            &DEPOSIT,
-            &VISIT,
-            &(VISIT - 1),
-            &CONFIRM_DEADLINE,
-            &BytesN::from_array(&setup.env, &[1; 32]),
-        )
-        .is_err());
+fn host_confirmation_returns_the_deposit_after_the_visit() {
+    let (env, client, asset, renter, host) = setup();
+    client.create_booking(&2, &renter, &host, &1_000_000, &2_000);
+    client.fund_booking(&renter, &2);
+    env.ledger().set_timestamp(2_000);
+    client.confirm_visit(&host, &2);
+    assert_eq!(asset.balance(&renter), 10_000_000);
+    assert_eq!(client.booking(&2).state, BookingState::Released);
 }
 
 #[test]
-fn creates_unique_booking_ids() {
-    let setup = setup();
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    create(&setup, 7);
-    assert_eq!(client.get_booking(&7).state, BookingState::Created);
-    assert!(client
-        .try_create_booking(
-            &7,
-            &setup.renter,
-            &setup.host,
-            &DEPOSIT,
-            &VISIT,
-            &CHECK_DEADLINE,
-            &CONFIRM_DEADLINE,
-            &BytesN::from_array(&setup.env, &[2; 32]),
-        )
-        .is_err());
-}
-
-#[test]
-fn funds_once_and_preserves_escrow_liability() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    assert_eq!(client.get_booking(&1).state, BookingState::Funded);
+fn rejects_invalid_or_duplicate_bookings() {
+    let (_env, client, _asset, renter, host) = setup();
     assert_eq!(
-        token::Client::new(&setup.env, &setup.asset).balance(&setup.contract_id),
-        DEPOSIT
+        client.try_create_booking(&1, &renter, &renter, &1_000_000, &2_000),
+        Err(Ok(ContractError::InvalidBooking))
     );
-    assert!(client.try_fund_booking(&setup.renter, &1).is_err());
-}
-
-#[test]
-fn renter_cancels_before_funding() {
-    let setup = setup();
-    create(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.cancel_by_renter(&setup.renter, &1);
+    client.create_booking(&1, &renter, &host, &1_000_000, &2_000);
     assert_eq!(
-        client.get_booking(&1).state,
-        BookingState::CancelledByRenter
+        client.try_create_booking(&1, &renter, &host, &1_000_000, &2_000),
+        Err(Ok(ContractError::BookingAlreadyExists))
     );
 }
 
 #[test]
-fn host_cancellation_refunds_a_funded_booking() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.cancel_by_host(&setup.host, &1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
-    assert_eq!(
-        token::Client::new(&setup.env, &setup.asset).balance(&setup.renter),
-        DEPOSIT
-    );
-}
-
-#[test]
-fn rejects_early_check_in_then_refunds_confirmed_visit() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    let proof = BytesN::from_array(&setup.env, &[3; 32]);
-    assert!(client.try_check_in(&setup.renter, &1, &proof).is_err());
-
-    setup.env.ledger().set_timestamp(VISIT - 100);
-    client.check_in(&setup.renter, &1, &proof);
-    client.confirm_visit(&setup.host, &1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
-    assert_eq!(
-        token::Client::new(&setup.env, &setup.asset).balance(&setup.renter),
-        DEPOSIT
-    );
-}
-
-#[test]
-fn renter_no_show_releases_to_host() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    setup.env.ledger().set_timestamp(CHECK_DEADLINE + 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.report_renter_no_show(&setup.host, &1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Released);
-    let token = token::Client::new(&setup.env, &setup.asset);
-    assert_eq!(token.balance(&setup.host), 99_000_000);
-    assert_eq!(token.balance(&setup.admin), 1_000_000);
-}
-
-#[test]
-fn host_no_show_refunds_renter() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    setup.env.ledger().set_timestamp(CHECK_DEADLINE + 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.report_host_no_show(&setup.renter, &1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
-}
-
-#[test]
-fn arbitrator_can_split_only_a_disputed_booking() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    assert!(client
-        .try_resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Refund)
-        .is_err());
-    client.open_dispute(&setup.renter, &1, &BytesN::from_array(&setup.env, &[4; 32]));
-    client.respond_to_dispute(&setup.host, &1, &BytesN::from_array(&setup.env, &[5; 32]));
-    client.resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Split(40_000_000));
-    let token = token::Client::new(&setup.env, &setup.asset);
-    assert_eq!(token.balance(&setup.renter), 40_000_000);
-    assert_eq!(token.balance(&setup.host), 60_000_000);
-    assert!(client
-        .try_resolve_dispute(&setup.arbitrator, &1, &DisputeResolution::Refund)
-        .is_err());
-}
-
-#[test]
-fn unauthorized_arbitrator_cannot_resolve() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.open_dispute(&setup.renter, &1, &BytesN::from_array(&setup.env, &[4; 32]));
-    assert!(client
-        .try_resolve_dispute(
-            &Address::generate(&setup.env),
-            &1,
-            &DisputeResolution::Refund,
-        )
-        .is_err());
-}
-
-#[test]
-fn expiration_refunds_funded_liability_once() {
-    let setup = setup();
-    create(&setup, 1);
-    fund(&setup, 1);
-    setup.env.ledger().set_timestamp(CONFIRM_DEADLINE + 1);
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.expire_booking(&1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Refunded);
-    assert!(client.try_expire_booking(&1).is_err());
-}
-
-#[test]
-fn pause_blocks_new_liabilities_but_not_safe_settlement() {
-    let setup = setup();
-    let client = VisitDepositEscrowClient::new(&setup.env, &setup.contract_id);
-    client.pause(&setup.admin);
-    assert!(client
-        .try_create_booking(
-            &1,
-            &setup.renter,
-            &setup.host,
-            &DEPOSIT,
-            &VISIT,
-            &CHECK_DEADLINE,
-            &CONFIRM_DEADLINE,
-            &BytesN::from_array(&setup.env, &[1; 32]),
-        )
-        .is_err());
-    client.unpause(&setup.admin);
-    create(&setup, 1);
-    assert_eq!(client.get_booking(&1).state, BookingState::Created);
+fn uses_a_low_cost_ninety_day_ttl() {
+    assert_eq!(TTL_THRESHOLD, 14 * 17_280);
+    assert_eq!(TTL_EXTEND_TO, 90 * 17_280);
 }
