@@ -4,7 +4,7 @@
 | --- | --- |
 | Public repository | Complete: [thomashuyyngo/PoVDeposit](https://github.com/thomashuyyngo/PoVDeposit) |
 | Exactly 30 meaningful commits | Blocked without rewriting existing history; no artificial rewrite performed |
-| Current revision on Railway | Pending push/deployment verification |
+| Current revision on Railway | Complete: [public Testnet deployment](https://povdeposit-production.up.railway.app/); health, live properties/slots and booking validation verified |
 | Current Wasm on Testnet | Pending redeploy; historical contract is clearly labeled |
 | Freighter lifecycle | Pending current-contract transaction evidence |
 | Rabet lifecycle | Pending current-contract transaction evidence |
