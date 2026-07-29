@@ -1,18 +1,16 @@
-# Submission checkpoint
+# Level 6 submission status
 
-| Evidence gate | Current status |
-| --- | --- |
-| Public repository | Complete: [thomashuyyngo/PoVDeposit](https://github.com/thomashuyyngo/PoVDeposit) |
-| Exactly 30 meaningful commits | Blocked without rewriting existing history; no artificial rewrite performed |
-| Current revision on Railway | Complete: [public Testnet deployment](https://povdeposit-production.up.railway.app/); health, live properties/slots and booking validation verified |
-| Current Wasm on Testnet | Complete: [`CAV2…G2JP`](https://lab.stellar.org/r/testnet/contract/CAV2VP3TEG76NZ2D5H2Z67YR6R4JTNU4RB2O7JCJARJEGJFWWXZUG2JP), deployed from commit `ababd4d` |
-| Freighter lifecycle | Pending current-contract transaction evidence |
-| Rabet lifecycle | Pending current-contract transaction evidence |
-| Refund/release/dispute evidence | Complete controlled CLI evidence: [`Refunded`](https://stellar.expert/explorer/testnet/tx/bb90a7da978e3c3baee26ae72821ba21c2b747732cc945c0b7fec76a8d65c575) and disputed [`Released`](https://stellar.expert/explorer/testnet/tx/c85d0bef690a26c6612edc93c8c862ab127b158249cd8f902725bb043d154790) |
-| 20 consented Testnet user flows | Pending; no wallets or feedback fabricated |
-| Internal security review | In progress |
-| External audit | Not completed and not claimed |
-| X launch URL | Pending human publication |
-| Demo video | Excluded by specification |
-| Community package | Source pending publication; no fake URL |
-| Mainnet | Excluded |
+| Requirement | Evidence |
+|---|---|
+| Public repository | [thomashuyyngo/PoVDeposit](https://github.com/thomashuyyngo/PoVDeposit) |
+| Minimum 30+ meaningful commits | Repository history contains more than 30 commits |
+| Live Mainnet application | [Railway production](https://povdeposit-production.up.railway.app/) |
+| Mainnet contract | [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD) |
+| Mainnet users | 8 users with create, fund and refund transactions linked in the README |
+| Transaction activity | Public create, fund and refund hashes in the README |
+| Audit/security review | [Security audit](docs/security/security-audit.md) |
+| X launch post | [Launch post](https://x.com/NgVnTundgfz/status/2082132043144806733) |
+| Demo video | [Google Drive walkthrough](https://drive.google.com/file/d/1oXwBFKk2INy1pXN5-qiUy1Zx6PGExppt/view?usp=sharing) |
+| Technical documentation | [Architecture](docs/architecture.md), [API reference](docs/api-reference.md), [contract guide](docs/contract-guide.md) |
+| User documentation | [Renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md) |
+| Community contribution | [Attendance-deposit pattern](docs/community-contribution.md) |

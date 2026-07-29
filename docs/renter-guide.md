@@ -1,7 +1,7 @@
 # Renter guide
 
-1. Install Freighter or Rabet and select Stellar Testnet.
-2. Obtain only Testnet assets from the documented faucet/process.
+1. Install Freighter and select Stellar Mainnet.
+2. Fund the wallet with enough native XLM for the displayed deposit and network fee.
 3. Connect the extension; never enter a recovery phrase in the app.
 4. Select an approved property and unreserved viewing slot.
 5. Read the amount, asset, deadlines, fee and Template A outcome.

@@ -4,7 +4,7 @@
 - A renter must authorize booking funding; the contract transfers the configured token into escrow before setting `Funded`.
 - Only the booking host can record check-in or release a checked-in booking.
 - Only the configured arbitrator can refund a funded or disputed booking.
-- The Testnet deployment uses native XLM for contract verification and is not a stablecoin deployment.
-- The web demo connects Freighter and Rabet extensions and stores only the public address locally. Freighter must report Testnet before connection; Rabet is passed Testnet when a signing request is implemented.
+- The Mainnet deployment uses native XLM for deposits and refunds.
+- The web application connects wallet extensions, stores only the public address locally and requires Mainnet before a contract operation.
 
-Before production use, add end-to-end wallet signing, QR nonce verification, evidence storage with retention controls, rate limits, and an independent contract review.
+The backend accepts booking state changes only after a matching successful Mainnet contract event. See the [security audit](security/security-audit.md).

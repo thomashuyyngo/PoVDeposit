@@ -6,4 +6,4 @@
 - QR replay/expiry tests and funding-event verifier tests.
 - Dependency and secret scanning in CI.
 
-Record exact final outputs and fresh Testnet transaction hashes after deployment. No external audit is claimed.
+Mainnet deployment, initialization and user lifecycle hashes are linked from the README and [security audit](security-audit.md). This is an internal point-in-time review.

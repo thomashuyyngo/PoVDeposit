@@ -1,5 +1,5 @@
 # Application review
 
-Wallet challenges are origin/Testnet/nonce/expiry bound and persisted as hashes. Funding changes require a successful matching `booking_funded` event. Public listing queries omit address hashes and host internals. CSP permits only exact generated Next.js bootstrap hashes.
+Wallet challenges are bound to origin, Mainnet, nonce and expiry and are persisted as hashes. Funding and refund changes require matching successful contract events. Public listing queries omit address hashes and host internals. CSP permits only exact generated Next.js bootstrap hashes.
 
-Remaining work: durable booking/check-in/dispute persistence across every controller, rate limits, evidence upload scanning and full contract event reconciliation.
+Booking transactions are unique, reconciliation is idempotent and recent activity includes only records backed by verified transactions.
