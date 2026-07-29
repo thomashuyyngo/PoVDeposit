@@ -7,7 +7,7 @@ import "./styles.css";
 
 export const metadata: Metadata = {
   title: "Proof-of-Visit Deposit",
-  description: "Transparent property-viewing escrow on Stellar Testnet.",
+  description: "Transparent property-viewing escrow on Stellar Mainnet.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <WalletDialog />
           </header>
           {children}
-          <footer><strong>Proof-of-Visit Deposit</strong><span>Stellar Testnet only · No Mainnet funds</span><nav aria-label="Footer navigation"><Link href="/docs/">Docs</Link><Link href="/security/">Security</Link><Link href="/help/">Help</Link></nav></footer>
+          <footer><strong>Proof-of-Visit Deposit</strong><span>Stellar Mainnet · Real XLM</span><nav aria-label="Footer navigation"><Link href="/docs/">Docs</Link><Link href="/security/">Security</Link><Link href="/help/">Help</Link></nav></footer>
         </Providers>
       </body>
     </html>

@@ -12,7 +12,7 @@ export default function Home() {
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <span className="network-pill">⌁ Stellar Testnet only</span>
+          <span className="network-pill">⌁ Stellar Mainnet</span>
           <h1>Book the viewing.<br /><em>Keep the deposit fair.</em></h1>
           <p>A transparent escrow for rental appointments. Review the rule, lock a small deposit, prove the visit and receive the contract-defined outcome.</p>
           <div className="hero-actions"><Link className="primary" href="/properties/">Browse properties</Link><Link className="secondary" href="/book/">Review deposit rules</Link></div>
@@ -37,7 +37,7 @@ export default function Home() {
           <span className="eyebrow">Visible before signing</span><h2>Deposit rules. Plain and fair.</h2>
           {[
             ["01", "You set the time", "Choose an available viewing slot."],
-            ["02", "Deposit held in escrow", "The contract holds the Testnet asset."],
+            ["02", "Deposit held in escrow", "The contract holds native Mainnet XLM."],
             ["03", "Check in to confirm", "Use a short-lived QR or manual code."],
             ["04", "Refund or fair resolution", "Attend for a refund; disputes pause settlement."],
           ].map(([number, title, copy]) => <div className="rule" key={number}><b>{number}</b><span><strong>{title}</strong><small>{copy}</small></span></div>)}
