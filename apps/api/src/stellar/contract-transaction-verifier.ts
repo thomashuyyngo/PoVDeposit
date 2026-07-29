@@ -20,12 +20,16 @@ export class ContractTransactionVerifier {
     return this.verifyEvent(transactionHash, bookingId, "visit_confirmed");
   }
 
+  async verifyRefund(transactionHash: string, bookingId: string) {
+    return this.verifyEvent(transactionHash, bookingId, "deposit_refunded");
+  }
+
   private async verifyEvent(transactionHash: string, bookingId: string, expectedEvent: string) {
     const contractId = process.env.ESCROW_CONTRACT_ID;
     if (!contractId) throw new Error("ESCROW_CONTRACT_ID is not configured");
     const transaction = await this.server.getTransaction(transactionHash);
     if (transaction.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
-      throw new Error("Transaction is not successful on Stellar Testnet");
+      throw new Error("Transaction is not successful on Stellar Mainnet");
     }
     const { events } = await this.server.getEvents({
       startLedger: transaction.ledger,

@@ -84,8 +84,8 @@ export class BookingWorkflowService {
         }
         const renter = await database.walletIdentity.upsert({
           where: { address: input.renter },
-          update: { network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() },
-          create: { address: input.renter, network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() },
+          update: { network: "PUBLIC" },
+          create: { address: input.renter, network: "PUBLIC" },
           select: { id: true },
         });
         const stored = await database.booking.create({
@@ -133,6 +133,21 @@ export class BookingWorkflowService {
     const booking = this.bookings.get(id);
     if (!booking) throw new Error("Booking not found");
     return booking;
+  }
+
+  async activity() {
+    if (!this.prisma) return [...this.bookings.values()].slice(-50).reverse();
+    const stored = await this.prisma.booking.findMany({
+      take: 50,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        property: { select: { slug: true } },
+        renter: { select: { address: true } },
+        host: { select: { address: true } },
+        transactions: true,
+      },
+    });
+    return stored.map((booking) => this.fromDatabase(booking));
   }
 
   async fund(
@@ -193,6 +208,43 @@ export class BookingWorkflowService {
       return this.get(id);
     }
     return this.update(booking, { state: "CHECKED_IN", checkInProofHash: proofHash });
+  }
+
+  async refund(
+    id: string,
+    actor: string,
+    transactionHash: string,
+    verification?: { ledger: number; confirmedAt: string },
+  ): Promise<Booking> {
+    const booking = await this.get(id);
+    if (booking.state !== "FUNDED") throw new Error("Booking must be funded");
+    if (booking.renter !== actor) throw new Error("Only renter can cancel");
+    this.assertHash(transactionHash);
+    if (this.prisma) {
+      if (!verification) throw new Error("Verified refund metadata is required");
+      await this.prisma.$transaction(async (database) => {
+        const updated = await database.booking.updateMany({
+          where: { id, status: "FUNDED", renter: { address: actor } },
+          data: { status: "REFUNDED", version: { increment: 1 } },
+        });
+        if (updated.count !== 1) throw new Error("Booking cannot be refunded");
+        await database.paymentTransaction.create({
+          data: {
+            bookingId: id,
+            hash: transactionHash,
+            kind: "REFUND",
+            amount: booking.depositAmount,
+            ledger: verification.ledger,
+            confirmedAt: new Date(verification.confirmedAt),
+          },
+        });
+        await database.bookingStatusHistory.create({
+          data: { bookingId: id, from: "FUNDED", to: "REFUNDED", actor, txHash: transactionHash },
+        });
+      });
+      return this.get(id);
+    }
+    return this.update(booking, { state: "REFUNDED", settlementTransactionHash: transactionHash });
   }
 
   async confirm(id: string, actor: string, transactionHash: string): Promise<Booking> {

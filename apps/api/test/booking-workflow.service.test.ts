@@ -37,6 +37,14 @@ describe("BookingWorkflowService", () => {
       .rejects.toThrow("Only renter can check in");
   });
 
+  it("records a renter refund after funding", async () => {
+    const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
+    const created = await service.create(input);
+    await service.fund(created.id, "b".repeat(64));
+    await expect(service.refund(created.id, input.renter, "e".repeat(64)))
+      .resolves.toMatchObject({ state: "REFUNDED", settlementTransactionHash: "e".repeat(64) });
+  });
+
   it("persists a booking against the approved property and unbooked slot", async () => {
     const writes: unknown[] = [];
     const prisma = {

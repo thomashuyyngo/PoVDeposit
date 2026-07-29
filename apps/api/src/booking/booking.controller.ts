@@ -34,6 +34,11 @@ export class BookingController {
     private readonly transactions: ContractTransactionVerifier,
   ) {}
 
+  @Get("activity/recent")
+  async activity() {
+    return this.bookings.activity();
+  }
+
   @Post()
   async create(@Body() body: unknown) {
     const input = createInput.safeParse(body);
@@ -61,6 +66,14 @@ export class BookingController {
     return this.serialize(await this.bookings.fund(id, input.transactionHash, verification));
   }
 
+  @Post(":id/cancel")
+  async cancel(@Param("id") id: string, @Body() body: unknown) {
+    const input = actorTransactionInput.parse(body);
+    const booking = await this.bookings.get(id);
+    const verification = await this.transactions.verifyRefund(input.transactionHash, booking.onChainBookingId);
+    return this.serialize(await this.bookings.refund(id, input.actor, input.transactionHash, verification));
+  }
+
   @Post(":id/check-in")
   async checkIn(@Param("id") id: string, @Body() body: unknown) {
     const input = actorProofInput.parse(body);
@@ -78,6 +91,6 @@ export class BookingController {
   }
 
   private serialize<T extends { depositAmount: bigint }>(booking: T) {
-    return { ...booking, depositAmount: booking.depositAmount.toString(), network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() };
+    return { ...booking, depositAmount: booking.depositAmount.toString(), network: "PUBLIC" };
   }
 }

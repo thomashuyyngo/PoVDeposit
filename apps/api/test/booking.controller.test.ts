@@ -20,14 +20,14 @@ describe("BookingController", () => {
       listingId: "listing-01",
       depositAmount: "10000000",
       state: "PENDING_FUNDING",
-      network: "TESTNET",
+      network: "PUBLIC",
     });
   });
 
-  it("does not mark a booking funded when Testnet verification fails", async () => {
+  it("does not mark a booking funded when Mainnet verification fails", async () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
     const controller = new BookingController(service, {
-      verifyFunding: async () => { throw new Error("Transaction is not successful on Stellar Testnet"); },
+      verifyFunding: async () => { throw new Error("Transaction is not successful on Stellar Mainnet"); },
     } as never);
     const booking = await controller.create({
       listingId: "listing-01",
