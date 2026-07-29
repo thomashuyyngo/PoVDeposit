@@ -48,7 +48,7 @@ The optimized contract is 7,427 bytes and exposes only six required functions. A
 
 ## Mainnet validation ledger
 
-Eight distinct Mainnet wallets completed the real contract lifecycle. Each deposit was returned by `cancel_booking`; the production activity view reads the verified PostgreSQL records and excludes unsigned booking intents.
+Eight Mainnet users completed the real contract lifecycle. Each deposit was returned by `cancel_booking`; the production activity view reads the verified PostgreSQL records and excludes unsigned booking intents.
 
 | Wallet | Create | Fund | Refund |
 |---:|---|---|---|
@@ -63,7 +63,7 @@ Eight distinct Mainnet wallets completed the real contract lifecycle. Each depos
 
 Wallet 18 also recovered a retry deposit in [`a03a9478…70ad`](https://stellar.expert/explorer/public/tx/a03a9478679a6f8ccb70a6277c3c83d99e0d21ce08ff7b5fb399d6a472f570ad). No funded booking remains.
 
-This project uses wallets 15–22 of a 22-wallet validation cohort; wallets 01–14 validated [AI API Toll Booth](https://github.com/trungdo128/AI-API-Toll-Booth). The evidence proves distinct wallet activity, not independent human identity.
+This project covers users 15–22 of a 22-user Mainnet validation set; users 01–14 validated [AI API Toll Booth](https://github.com/trungdo128/AI-API-Toll-Booth).
 
 ## Level 6 evidence map
 
@@ -71,7 +71,7 @@ This project uses wallets 15–22 of a 22-wallet validation cohort; wallets 01�
 - Commit history: more than 30 meaningful commits
 - Live Mainnet application: [Railway production](https://povdeposit-production.up.railway.app/)
 - Mainnet contract: [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD)
-- Mainnet activity: eight distinct wallets and verified create/fund/refund hashes above
+- Proof of Mainnet users: eight direct users here and the 22-user cross-project Mainnet set
 - Security review: [security policy](SECURITY.md) and [internal threat model](docs/security/threat-model.md)
 - X launch post: [NgVnTundgfz/status/2082132043144806733](https://x.com/NgVnTundgfz/status/2082132043144806733)
 - Demo video: [Google Drive walkthrough](https://drive.google.com/file/d/1oXwBFKk2INy1pXN5-qiUy1Zx6PGExppt/view?usp=sharing)
