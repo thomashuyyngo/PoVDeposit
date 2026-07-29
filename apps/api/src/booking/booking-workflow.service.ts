@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable, Optional } from "@nestjs/common";
+import { PrismaService } from "../database/prisma.service.js";
 
 export type BookingState =
   | "PENDING_FUNDING"
@@ -7,9 +8,12 @@ export type BookingState =
   | "CHECKED_IN"
   | "COMPLETED"
   | "CANCELLED"
+  | "RENTER_NO_SHOW"
+  | "HOST_NO_SHOW"
   | "DISPUTED"
   | "REFUNDED"
   | "RELEASED"
+  | "SPLIT"
   | "EXPIRED";
 
 type CreateBooking = {
@@ -39,9 +43,10 @@ export class BookingWorkflowService {
 
   constructor(
     @Optional() @Inject(BOOKING_CLOCK) private readonly now: () => Date = () => new Date(),
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
-  create(input: CreateBooking): Booking {
+  async create(input: CreateBooking): Promise<Booking> {
     if (input.renter === input.host) throw new Error("Renter and host must differ");
     if (input.depositAmount <= 0n || input.depositAmount > 100_000_000_000n) {
       throw new Error("Deposit amount out of bounds");
@@ -56,36 +61,159 @@ export class BookingWorkflowService {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
+    if (this.prisma) {
+      return this.prisma.$transaction(async (database) => {
+        const property = await database.property.findFirst({
+          where: { slug: input.listingId, active: true, host: { address: input.host } },
+          select: {
+            id: true,
+            hostId: true,
+            slots: {
+              where: { startsAt: new Date(input.visitTime), booking: null },
+              take: 1,
+              select: { id: true },
+            },
+          },
+        });
+        const slot = property?.slots[0];
+        if (!property || !slot) {
+          throw new Error("Approved property or available viewing slot not found");
+        }
+        const renter = await database.walletIdentity.upsert({
+          where: { address: input.renter },
+          update: { network: "TESTNET" },
+          create: { address: input.renter, network: "TESTNET" },
+          select: { id: true },
+        });
+        const stored = await database.booking.create({
+          data: {
+            id: booking.id,
+            onChainBookingId: booking.id,
+            propertyId: property.id,
+            slotId: slot.id,
+            renterId: renter.id,
+            hostId: property.hostId,
+            depositAmount: input.depositAmount,
+            asset: "native",
+            visitTime: new Date(input.visitTime),
+            evidenceHash: input.evidenceHash,
+            history: { create: { to: "PENDING_FUNDING", actor: input.renter } },
+          },
+          include: {
+            property: { select: { slug: true } },
+            renter: { select: { address: true } },
+            host: { select: { address: true } },
+            transactions: true,
+          },
+        });
+        return this.fromDatabase(stored);
+      }, { isolationLevel: "Serializable" });
+    }
     this.bookings.set(booking.id, booking);
     return booking;
   }
 
-  get(id: string): Booking {
+  async get(id: string): Promise<Booking> {
+    if (this.prisma) {
+      const stored = await this.prisma.booking.findUnique({
+        where: { id },
+        include: {
+          property: { select: { slug: true } },
+          renter: { select: { address: true } },
+          host: { select: { address: true } },
+          transactions: true,
+        },
+      });
+      if (!stored) throw new Error("Booking not found");
+      return this.fromDatabase(stored);
+    }
     const booking = this.bookings.get(id);
     if (!booking) throw new Error("Booking not found");
     return booking;
   }
 
-  fund(id: string, transactionHash: string): Booking {
-    const booking = this.get(id);
+  async fund(
+    id: string,
+    transactionHash: string,
+    verification?: { ledger: number; confirmedAt: string },
+  ): Promise<Booking> {
+    const booking = await this.get(id);
     if (booking.state !== "PENDING_FUNDING") throw new Error("Booking is not awaiting funding");
     this.assertHash(transactionHash);
+    if (this.prisma) {
+      if (!verification) throw new Error("Verified funding metadata is required");
+      await this.prisma.$transaction(async (database) => {
+        const updated = await database.booking.updateMany({
+          where: { id, status: "PENDING_FUNDING" },
+          data: { status: "FUNDED", version: { increment: 1 } },
+        });
+        if (updated.count !== 1) throw new Error("Booking is not awaiting funding");
+        await database.paymentTransaction.create({
+          data: {
+            bookingId: id,
+            hash: transactionHash,
+            kind: "FUND",
+            amount: booking.depositAmount,
+            ledger: verification.ledger,
+            confirmedAt: new Date(verification.confirmedAt),
+          },
+        });
+        await database.bookingStatusHistory.create({
+          data: {
+            bookingId: id,
+            from: "PENDING_FUNDING",
+            to: "FUNDED",
+            actor: booking.renter,
+            txHash: transactionHash,
+          },
+        });
+      });
+      return this.get(id);
+    }
     return this.update(booking, { state: "FUNDED", fundingTransactionHash: transactionHash });
   }
 
-  checkIn(id: string, actor: string, proofHash: string): Booking {
-    const booking = this.get(id);
+  async checkIn(id: string, actor: string, proofHash: string): Promise<Booking> {
+    const booking = await this.get(id);
     if (booking.state !== "FUNDED") throw new Error("Booking must be funded");
     if (booking.renter !== actor) throw new Error("Only renter can check in");
     this.assertHash(proofHash);
+    if (this.prisma) {
+      const updated = await this.prisma.booking.updateMany({
+        where: { id, status: "FUNDED", renter: { address: actor } },
+        data: { status: "CHECKED_IN", checkInProofHash: proofHash, version: { increment: 1 } },
+      });
+      if (updated.count !== 1) throw new Error("Booking cannot be checked in");
+      await this.prisma.bookingStatusHistory.create({
+        data: { bookingId: id, from: "FUNDED", to: "CHECKED_IN", actor },
+      });
+      return this.get(id);
+    }
     return this.update(booking, { state: "CHECKED_IN", checkInProofHash: proofHash });
   }
 
-  confirm(id: string, actor: string, transactionHash: string): Booking {
-    const booking = this.get(id);
+  async confirm(id: string, actor: string, transactionHash: string): Promise<Booking> {
+    const booking = await this.get(id);
     if (booking.state !== "CHECKED_IN") throw new Error("Renter must check in first");
     if (booking.host !== actor) throw new Error("Only host can confirm");
     this.assertHash(transactionHash);
+    if (this.prisma) {
+      const updated = await this.prisma.booking.updateMany({
+        where: { id, status: "CHECKED_IN", host: { address: actor } },
+        data: { status: "COMPLETED", version: { increment: 1 } },
+      });
+      if (updated.count !== 1) throw new Error("Booking cannot be confirmed");
+      await this.prisma.bookingStatusHistory.create({
+        data: {
+          bookingId: id,
+          from: "CHECKED_IN",
+          to: "COMPLETED",
+          actor,
+          txHash: transactionHash,
+        },
+      });
+      return this.get(id);
+    }
     return this.update(booking, { state: "COMPLETED", settlementTransactionHash: transactionHash });
   }
 
@@ -96,5 +224,36 @@ export class BookingWorkflowService {
   private update(booking: Booking, changes: Partial<Booking>): Booking {
     Object.assign(booking, changes, { updatedAt: this.now().toISOString() });
     return booking;
+  }
+
+  private fromDatabase(stored: {
+    id: string;
+    property: { slug: string };
+    renter: { address: string };
+    host: { address: string };
+    depositAmount: bigint;
+    visitTime: Date;
+    evidenceHash: string;
+    checkInProofHash: string | null;
+    status: BookingState;
+    createdAt: Date;
+    updatedAt: Date;
+    transactions: Array<{ hash: string; kind: "FUND" | "REFUND" | "RELEASE" | "SPLIT" }>;
+  }): Booking {
+    return {
+      id: stored.id,
+      listingId: stored.property.slug,
+      renter: stored.renter.address,
+      host: stored.host.address,
+      depositAmount: stored.depositAmount,
+      visitTime: stored.visitTime.toISOString(),
+      evidenceHash: stored.evidenceHash,
+      state: stored.status,
+      checkInProofHash: stored.checkInProofHash ?? undefined,
+      fundingTransactionHash: stored.transactions.find((value) => value.kind === "FUND")?.hash,
+      settlementTransactionHash: stored.transactions.find((value) => value.kind !== "FUND")?.hash,
+      createdAt: stored.createdAt.toISOString(),
+      updatedAt: stored.updatedAt.toISOString(),
+    };
   }
 }

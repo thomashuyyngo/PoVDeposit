@@ -11,26 +11,76 @@ const input = {
 };
 
 describe("BookingWorkflowService", () => {
-  it("mirrors the funded, checked-in, and completed on-chain lifecycle", () => {
+  it("mirrors the funded, checked-in, and completed on-chain lifecycle", async () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
-    const created = service.create(input);
+    const created = await service.create(input);
     expect(created.state).toBe("PENDING_FUNDING");
 
-    expect(service.fund(created.id, "b".repeat(64)).state).toBe("FUNDED");
-    expect(service.checkIn(created.id, input.renter, "c".repeat(64)).state).toBe("CHECKED_IN");
-    expect(service.confirm(created.id, input.host, "d".repeat(64)).state).toBe("COMPLETED");
+    expect((await service.fund(created.id, "b".repeat(64))).state).toBe("FUNDED");
+    expect((await service.checkIn(created.id, input.renter, "c".repeat(64))).state).toBe("CHECKED_IN");
+    expect((await service.confirm(created.id, input.host, "d".repeat(64))).state).toBe("COMPLETED");
   });
 
-  it("rejects invalid actors, transitions, and booking boundaries", () => {
+  it("rejects invalid actors, transitions, and booking boundaries", async () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
-    expect(() => service.create({ ...input, renter: input.host })).toThrow("Renter and host must differ");
-    expect(() => service.create({ ...input, visitTime: "2026-07-27T10:00:00.000Z" }))
-      .toThrow("Visit time must be in the future");
+    await expect(service.create({ ...input, renter: input.host })).rejects.toThrow("Renter and host must differ");
+    await expect(service.create({ ...input, visitTime: "2026-07-27T10:00:00.000Z" }))
+      .rejects.toThrow("Visit time must be in the future");
 
-    const created = service.create(input);
-    expect(() => service.checkIn(created.id, input.renter, "c".repeat(64)))
-      .toThrow("Booking must be funded");
-    service.fund(created.id, "b".repeat(64));
-    expect(() => service.checkIn(created.id, "GOTHER", "c".repeat(64))).toThrow("Only renter can check in");
+    const created = await service.create(input);
+    await expect(service.checkIn(created.id, input.renter, "c".repeat(64)))
+      .rejects.toThrow("Booking must be funded");
+    await service.fund(created.id, "b".repeat(64));
+    await expect(service.checkIn(created.id, "GOTHER", "c".repeat(64)))
+      .rejects.toThrow("Only renter can check in");
+  });
+
+  it("persists a booking against the approved property and unbooked slot", async () => {
+    const writes: unknown[] = [];
+    const prisma = {
+      property: {
+        findFirst: async () => ({
+          id: "property-01",
+          slug: input.listingId,
+          hostId: "host-01",
+          host: { address: input.host },
+          slots: [{ id: "slot-01" }],
+        }),
+      },
+      walletIdentity: {
+        upsert: async () => ({ id: "renter-01" }),
+      },
+      booking: {
+        create: async ({ data }: { data: unknown }) => {
+          writes.push(data);
+          return {
+            id: "booking-01",
+            onChainBookingId: "booking-01",
+            property: { slug: input.listingId },
+            renter: { address: input.renter },
+            host: { address: input.host },
+            depositAmount: input.depositAmount,
+            visitTime: new Date(input.visitTime),
+            evidenceHash: input.evidenceHash,
+            status: "PENDING_FUNDING",
+            createdAt: new Date("2026-07-28T10:00:00Z"),
+            updatedAt: new Date("2026-07-28T10:00:00Z"),
+            transactions: [],
+          };
+        },
+      },
+      $transaction: async (run: (database: unknown) => Promise<unknown>) => run(prisma),
+    };
+    const service = new BookingWorkflowService(
+      () => new Date("2026-07-28T10:00:00Z"),
+      prisma as never,
+    );
+
+    await expect(service.create(input)).resolves.toMatchObject({
+      id: "booking-01",
+      listingId: input.listingId,
+      state: "PENDING_FUNDING",
+    });
+    expect(writes).toHaveLength(1);
   });
 });

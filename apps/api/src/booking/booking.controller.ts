@@ -29,11 +29,11 @@ export class BookingController {
   ) {}
 
   @Post()
-  create(@Body() body: unknown) {
+  async create(@Body() body: unknown) {
     const input = createInput.safeParse(body);
     if (!input.success) throw new BadRequestException("Invalid booking request");
     try {
-      return this.serialize(this.bookings.create({
+      return this.serialize(await this.bookings.create({
         ...input.data,
         depositAmount: BigInt(input.data.depositAmount),
       }));
@@ -43,28 +43,28 @@ export class BookingController {
   }
 
   @Get(":id")
-  get(@Param("id") id: string) {
-    return this.serialize(this.bookings.get(id));
+  async get(@Param("id") id: string) {
+    return this.serialize(await this.bookings.get(id));
   }
 
   @Post(":id/fund")
   async fund(@Param("id") id: string, @Body() body: unknown) {
     const input = transactionInput.parse(body);
-    const booking = this.bookings.get(id);
-    await this.transactions.verifyFunding(input.transactionHash, booking.id);
-    return this.serialize(this.bookings.fund(id, input.transactionHash));
+    const booking = await this.bookings.get(id);
+    const verification = await this.transactions.verifyFunding(input.transactionHash, booking.id);
+    return this.serialize(await this.bookings.fund(id, input.transactionHash, verification));
   }
 
   @Post(":id/check-in")
-  checkIn(@Param("id") id: string, @Body() body: unknown) {
+  async checkIn(@Param("id") id: string, @Body() body: unknown) {
     const input = actorProofInput.parse(body);
-    return this.serialize(this.bookings.checkIn(id, input.actor, input.proofHash));
+    return this.serialize(await this.bookings.checkIn(id, input.actor, input.proofHash));
   }
 
   @Post(":id/confirm")
-  confirm(@Param("id") id: string, @Body() body: unknown) {
+  async confirm(@Param("id") id: string, @Body() body: unknown) {
     const input = actorProofInput.parse(body);
-    return this.serialize(this.bookings.confirm(id, input.actor, input.proofHash));
+    return this.serialize(await this.bookings.confirm(id, input.actor, input.proofHash));
   }
 
   private serialize<T extends { depositAmount: bigint }>(booking: T) {

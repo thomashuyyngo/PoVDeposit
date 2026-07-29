@@ -3,12 +3,12 @@ import { BookingController } from "../src/booking/booking.controller.js";
 import { BookingWorkflowService } from "../src/booking/booking-workflow.service.js";
 
 describe("BookingController", () => {
-  it("creates a JSON-safe booking intent with explicit property evidence", () => {
+  it("creates a JSON-safe booking intent with explicit property evidence", async () => {
     const controller = new BookingController(
       new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z")),
       { verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }) } as never,
     );
-    const result = controller.create({
+    const result = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",
       host: "GHOST",
@@ -29,7 +29,7 @@ describe("BookingController", () => {
     const controller = new BookingController(service, {
       verifyFunding: async () => { throw new Error("Transaction is not successful on Stellar Testnet"); },
     } as never);
-    const booking = controller.create({
+    const booking = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",
       host: "GHOST",
@@ -40,6 +40,6 @@ describe("BookingController", () => {
 
     await expect(controller.fund(booking.id, { transactionHash: "a".repeat(64) }))
       .rejects.toThrow("not successful");
-    expect(service.get(booking.id).state).toBe("PENDING_FUNDING");
+    expect((await service.get(booking.id)).state).toBe("PENDING_FUNDING");
   });
 });
