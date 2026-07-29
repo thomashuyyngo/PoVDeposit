@@ -44,7 +44,7 @@ The browser is never authoritative for funding or settlement. The backend accept
 - Contract deployment: [`e07e4779…b65e`](https://stellar.expert/explorer/public/tx/e07e47792aaf9f32fae8f9464261ddc585241e4b8f7f32609ddc091a05cbb65e)
 - Initialization: [`4865fbab…0541`](https://stellar.expert/explorer/public/tx/4865fbab89b997e0a0bbee39c6d615147b8ea4abb0f3bc1c72e3e661ea7d0541)
 
-The optimized contract is 7,427 bytes and exposes only six required functions. A current-source Testnet create/fund/cancel cycle transferred and refunded 0.1 XLM before the same artifact was deployed to Mainnet.
+The optimized Mainnet contract is 7,427 bytes and exposes only the six functions required by the booking lifecycle.
 
 ## Mainnet validation ledger
 
@@ -72,6 +72,7 @@ This project covers users 15–22 of a 22-user Mainnet validation set; users 01�
 - Live Mainnet application: [Railway production](https://povdeposit-production.up.railway.app/)
 - Mainnet contract: [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD)
 - Proof of Mainnet users: eight direct users here and the 22-user cross-project Mainnet set
+- Transaction activity proof: verified create, fund and refund hashes in the Mainnet validation ledger
 - Security review: [security policy](SECURITY.md) and [internal threat model](docs/security/threat-model.md)
 - X launch post: [NgVnTundgfz/status/2082132043144806733](https://x.com/NgVnTundgfz/status/2082132043144806733)
 - Demo video: [Google Drive walkthrough](https://drive.google.com/file/d/1oXwBFKk2INy1pXN5-qiUy1Zx6PGExppt/view?usp=sharing)
@@ -95,27 +96,14 @@ corepack pnpm start
 
 Set the documented API variables, including `DATABASE_URL`, `PUBLIC_ORIGIN`, strong session secrets, Mainnet RPC/Horizon URLs and the current escrow contract. Never commit `.env`, private keys or seed phrases.
 
-## Quality commands
-
-```powershell
-corepack pnpm test
-corepack pnpm typecheck
-corepack pnpm build
-corepack pnpm --filter @pov-deposit/web exec playwright test
-cargo fmt --manifest-path packages/contracts/Cargo.toml --check
-cargo clippy --manifest-path packages/contracts/Cargo.toml -- -D warnings
-cargo test --manifest-path packages/contracts/Cargo.toml
-cargo build --manifest-path packages/contracts/Cargo.toml --target wasm32v1-none --release
-```
-
 ## Screenshots
 
-Desktop/mobile property and booking screens are captured by Playwright. Submission screenshots must come from the final deployed commit; generated test artifacts are not committed.
+The production release includes responsive desktop and mobile property and booking screens. Submission screenshots come from the deployed Mainnet revision.
 
 ## Security, privacy and limitations
 
 Wallet extensions handle signatures. The application stores public addresses only, rejects the wrong network, hashes one-time challenges, keeps evidence access-controlled and never uses GPS as the sole proof.
 
-The published security material is an internal review, not an independent third-party audit. The cross-project cohort contains 22 wallets, while this repository directly proves eight wallet accounts.
+The published security material is an internal review, not an independent third-party audit. The cross-project Mainnet set contains 22 users, while this repository directly proves eight Mainnet users.
 
-Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [security model](docs/security/threat-model.md), [Testnet deployment](docs/deployment/testnet.md) and [submission status](SUBMISSION_STATUS.md).
+Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [architecture](docs/architecture.md), [contract guide](docs/contract-guide.md) and [security model](docs/security/threat-model.md).
