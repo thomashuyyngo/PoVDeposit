@@ -1,60 +1,87 @@
-# PoVDeposit
+# Proof-of-Visit Deposit
 
-PoVDeposit is a Stellar Testnet escrow platform for rental-property viewing appointments. It records a booking deposit, QR check-in, attendance confirmation, refund/release outcomes, and eligible disputes.
+Proof-of-Visit Deposit is a property-viewing escrow on Stellar Testnet. A renter reserves an approved viewing slot, sees the attendance rule before signing, funds a Soroban escrow, checks in with a short-lived QR challenge and receives the contract-defined refund, release or dispute outcome.
 
-## Status
+## What it solves
 
-The escrow contract is deployed and initialized on Stellar Testnet. Mainnet deployment, stablecoin integration, user evidence, external audits, and demo video are intentionally not claimed.
+Rental viewings frequently fail because a listing is untrustworthy, one party does not attend, deposits are requested without clear rules, or there is no shared evidence. This product makes the amount, deadlines, no-show outcome and dispute path visible before funds move.
 
-## Railway deployment
+## Why Stellar
 
-Railway successfully deployed the current `development` revision on 2026-07-19. The service runs `pnpm migrate && pnpm seed && pnpm start`, exposes `/health`, and uses Neon PostgreSQL.
+Soroban enforces booking state and one-time settlement while Stellar provides low-cost Testnet transactions and public explorer evidence. Only evidence hashes and public wallet addresses belong on-chain; personal details and precise locations do not.
 
-The public Testnet application is [povdeposit-production.up.railway.app](https://povdeposit-production.up.railway.app/). Its [health endpoint](https://povdeposit-production.up.railway.app/health) returned HTTP 200 on 2026-07-19. The [Railway dashboard](https://railway.com/project/dd24d801-4711-41e0-8c76-80bbd2baab73?environmentId=305f77b9-6e4e-405d-b94a-1fb06b04bdb6) contains deployment history.
+This release is Testnet-only. Native Testnet XLM is used for engineering verification and is not represented as a stablecoin.
 
-## Testnet deployment
+## Roles
 
-- Escrow v2: [`CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF`](https://lab.stellar.org/r/testnet/contract/CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF)
-- Deploy transaction: [`8b14ebe6…0a2165`](https://stellar.expert/explorer/testnet/tx/8b14ebe648b4fa2402c279ed6e8216afa8c358c9f45e5080e6b7327f050a2165)
-- Initialize transaction: [`d66389ea…b9fb25`](https://stellar.expert/explorer/testnet/tx/d66389ea801252ca3ce9b3e92fe913e9d38329b3992ba33479e90754f6b9fb25)
-- Payment asset: native Testnet XLM asset contract, used only for deployment verification—not represented as a stablecoin.
-- On-chain booking evidence: booking `1` was created as `PendingFunding` ([transaction](https://stellar.expert/explorer/testnet/tx/1be8a021b27fd0d1130f00de0d2ffa2c512594b54cf6fad87b30a696665e893d)), funded with 1 native Testnet atomic unit ([transaction](https://stellar.expert/explorer/testnet/tx/9fc984b7bb9572ec1101d36e9eef796c1f1bbca9ed691a44689815d4f3330e93)), checked in ([transaction](https://stellar.expert/explorer/testnet/tx/df882931a7d37b0d30ca9002c88a4ea2c47bcc3f1e6d7e75a53435c7825de95a)), and released ([transaction](https://stellar.expert/explorer/testnet/tx/2900d7e4a8cfcd42bbe7233ab3ed24e8267db710869c67ba551dc7762b9a2ee1)). The final on-chain state is `Released`.
-- Escrow v2 cancellation evidence: booking `1` was created ([transaction](https://stellar.expert/explorer/testnet/tx/746222b0c11e65cecb049440fb621315fadd7b8eeb1143a9d74b73ba938f1b93)) and cancelled before funding ([transaction](https://stellar.expert/explorer/testnet/tx/31074806e8a6c0dfc96984e431928a6b1f3efd702a242a8f33b6de1b4042bede)).
-- Current v2 wallet smoke test: a controlled renter/host pair completed booking `2` through `PendingFunding → Funded → CheckedIn → Released`; [wallet smoke evidence](docs/testnet-wallet-smoke.md).
-- The same controlled Testnet setup also completed booking `3` through `PendingFunding → Funded → Disputed → Refunded`; [wallet smoke evidence](docs/testnet-wallet-smoke.md).
+- Renter: browse approved listings, choose a slot, review Template A, fund, check in, confirm, cancel or dispute.
+- Host/agent: apply, manage listings and slots, confirm attendance, report a no-show and answer disputes.
+- Admin/arbitrator: moderate listings and resolve eligible disputes without arbitrary access to escrow funds.
 
-## Workspace
+## Attendance-deposit rule
 
-- `apps/web` — renter, host, admin, and arbitrator experiences
-- `apps/api` — booking-intent and health API
-- `packages/contracts` — Soroban visit-deposit escrow
-- `docs` — security boundaries and verification records
+Template A is the MVP rule. An attended and confirmed visit refunds the renter. An eligible renter no-show may release the deposit to the host minus the disclosed bounded fee. A host no-show refunds the renter. An eligible dispute pauses settlement until the configured arbitrator resolves it.
 
-## Local checks
+`Created → Funded → CheckedIn → VisitConfirmed → Refunded`
+
+Alternative terminal paths are cancellation, renter/host no-show, dispute resolution, release and expiry. A booking settles at most once.
+
+## System design
+
+- `apps/web`: Next.js static export with property search, booking review, renter/host/admin views, Freighter and Rabet modal, responsive modes and a lazy React Three Fiber building scene.
+- `apps/api`: NestJS, Prisma and PostgreSQL for wallet sessions, approved properties, slots, booking records, QR challenges, disputes, audit logs and contract reconciliation.
+- `packages/contracts`: Rust `VisitDepositEscrow` Soroban contract.
+- `packages/stellar`: generated TypeScript bindings.
+
+The browser is never authoritative for funding or settlement. The backend accepts a state change only after a successful Testnet transaction containing the matching contract event.
+
+## Public Testnet environment
+
+- Application: [povdeposit-production.up.railway.app](https://povdeposit-production.up.railway.app/)
+- Health: [ `/health` ](https://povdeposit-production.up.railway.app/health)
+- Historical verified escrow: [`CBO2…I7LF`](https://lab.stellar.org/r/testnet/contract/CBO2L3OPLXQLKGNDV63VO3YDGL3KADSB4OOC3TQHT6ZP4SUNUP2KI7LF)
+- Historical deploy transaction: [`8b14ebe6…a2165`](https://stellar.expert/explorer/testnet/tx/8b14ebe648b4fa2402c279ed6e8216afa8c358c9f45e5080e6b7327f050a2165)
+- Historical initialize transaction: [`d66389ea…9fb25`](https://stellar.expert/explorer/testnet/tx/d66389ea801252ca3ce9b3e92fe913e9d38329b3992ba33479e90754f6b9fb25)
+
+The current contract source and optimized Wasm are newer than this historical deployment. Redeploying the current Wasm and recording fresh Freighter/Rabet flows remain required before the current revision is submission-ready.
+
+## Run locally
+
+Requirements: Node.js 22, pnpm 10.18.3, Rust stable, `wasm32v1-none`, PostgreSQL and Stellar CLI.
 
 ```powershell
-pnpm test
-Set-Location packages/contracts
-cargo test
+corepack pnpm install
+Copy-Item apps/api/.env.example apps/api/.env
+corepack pnpm --filter @pov-deposit/api exec prisma generate
+corepack pnpm --filter @pov-deposit/api migrate
+corepack pnpm --filter @pov-deposit/api seed
+corepack pnpm build
+corepack pnpm start
 ```
 
-Open `apps/web/index.html` for the current rental-escrow demo. `POST /api/bookings` persists a pending-funding off-chain intent with its own UUID; it does not claim to create an on-chain booking. Contract tests cover token funding, host release, and arbitrator refund using the local Soroban host; deployment and wallet integration are not claimed until they are configured and verified on Testnet.
+Set the documented API variables, including `DATABASE_URL`, `PUBLIC_ORIGIN`, strong session/check-in secrets, Testnet RPC/Horizon URLs, accepted asset and the current escrow contract. Never commit `.env`, private keys or seed phrases.
 
-## Service configuration
+## Quality commands
 
-Set `DATABASE_URL` to the managed PostgreSQL connection string. `PORT` is optional and defaults to `3000`. Do not commit database credentials, wallet secrets, or Testnet key material.
+```powershell
+corepack pnpm test
+corepack pnpm typecheck
+corepack pnpm build
+corepack pnpm --filter @pov-deposit/web exec playwright test
+cargo fmt --manifest-path packages/contracts/Cargo.toml --check
+cargo clippy --manifest-path packages/contracts/Cargo.toml -- -D warnings
+cargo test --manifest-path packages/contracts/Cargo.toml
+cargo build --manifest-path packages/contracts/Cargo.toml --target wasm32v1-none --release
+```
 
-See [security boundaries](docs/security.md) and the [verification record](docs/verification.md) for the tested scope and known production gaps.
+## Screenshots
 
-## Level 6 readiness
+Desktop/mobile property and booking screens are captured by Playwright. Submission screenshots must come from the final deployed commit; generated test artifacts are not committed.
 
-The repository is public at [thomashuyyngo/PoVDeposit](https://github.com/thomashuyyngo/PoVDeposit) and its `development` branch contains at least 30 meaningful commits. The app is live on Railway and the escrow has controlled Testnet transaction evidence for release and arbitrator refund.
+## Security, privacy and limitations
 
-The following Level 6 items are intentionally separated by evidence type:
+Wallet extensions handle signatures. The application stores public addresses only, rejects the wrong network, hashes one-time challenges, keeps evidence access-controlled and never uses GPS as the sole proof.
 
-- **Delivered for Testnet:** public application, Testnet contract, controlled transaction activity, technical documentation, verification records, and internal security boundaries.
-- **Not completed:** Mainnet deployment/address, proof of 20+ Mainnet users, external audit proof, and a published community contribution.
-- **User guidance:** the README documents the available Testnet booking flow; a standalone end-user guide remains in progress.
-- **Submission:** use the public repository URL above before the monthly deadline.
+Current-source deployment, durable booking/check-in persistence, full contract reconciliation, current Freighter and Rabet smoke tests, 20 consented user flows, an authorized X post and any external audit are still pending. Exact 30 commits cannot be claimed because existing meaningful history already exceeds 30 and has not been rewritten.
 
-No Mainnet, external-audit, or user-growth claim is made without verifiable evidence.
+Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [security model](docs/security/threat-model.md), [Testnet deployment](docs/deployment/testnet.md) and [submission status](SUBMISSION_STATUS.md).
