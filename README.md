@@ -52,18 +52,14 @@ Eight Mainnet users completed the real contract lifecycle. Each deposit was retu
 
 | Wallet | Create | Fund | Refund |
 |---:|---|---|---|
-| 15 | [`a1db6708…ca83`](https://stellar.expert/explorer/public/tx/a1db67084d8d9936efad4f1b96f5ccc65bdd4937278d8f436d4008d3125fca83) | [`17180619…0369`](https://stellar.expert/explorer/public/tx/17180619acc34336ddb1050f27cd285ecabbb8599c0f6b8fc42e9819b79c0369) | [`0a1eade0…f0b2`](https://stellar.expert/explorer/public/tx/0a1eade0e85a0470058813cbc8e7087e1fe9abb05d66b61a2491ba37ed59f0b2) |
-| 16 | [`efce4c2a…c4a4`](https://stellar.expert/explorer/public/tx/efce4c2acc910d5a1a98e6004585f48b4de0ed971aa0760ce36424746dcec4a4) | [`441db380…e045`](https://stellar.expert/explorer/public/tx/441db3804bbaec7d8bbaeb2d901c552e58ce7127b892431c52aee16b31ece045) | [`a28368ae…623a`](https://stellar.expert/explorer/public/tx/a28368ae483e97cbcf2cf7442c8d57870be780895a26a9da59fe87cd2302623a) |
-| 17 | [`f2f3782d…b7ed`](https://stellar.expert/explorer/public/tx/f2f3782d4fba7fa56893ee484e4594d55309d13e8b6e93de7a3d9921ed51b7ed) | [`006f72ac…691e`](https://stellar.expert/explorer/public/tx/006f72ac329e0e6a222bd7ec2402ff98d4a1c0ae84e707e1b7d460a04305691e) | [`877b8873…7846`](https://stellar.expert/explorer/public/tx/877b88739a76368103d02387b4d26d15a67967eedd814826a203314652177846) |
-| 18 | [`3a09f156…d419`](https://stellar.expert/explorer/public/tx/3a09f156aaf58eab4bd52a6ab8050856804bf56b5eebb9c11843e1ee6c7ed419) | [`2b0cf229…2add`](https://stellar.expert/explorer/public/tx/2b0cf2293dfcb31916cd64402f05340633fd7aa190d5d102873ba55372db2add) | [`831a57b2…0075`](https://stellar.expert/explorer/public/tx/831a57b2558d89c517e6b66665fc208f3383bb035788253ac1838c9d3ca20075) |
-| 19 | [`3b8a4e7f…fef5`](https://stellar.expert/explorer/public/tx/3b8a4e7f15e11a17cd31731836b9a0f2a3e8611bbfda2c3ca70797ca40b3fef5) | [`a9bddb33…296d`](https://stellar.expert/explorer/public/tx/a9bddb3356ab1f485379fc78dd5a0a66ac511d77a6ab88ea1babe07fc33f296d) | [`e590d2d1…4cf2`](https://stellar.expert/explorer/public/tx/e590d2d11766274479c28a4ae47486694ed841fc2704b2aae288812d1c6a4cf2) |
-| 20 | [`eb5c6175…01b5`](https://stellar.expert/explorer/public/tx/eb5c617575b8412c0c3dd8712732146fec6ff16d66435785fc1ab6f4ab8d01b5) | [`5f866c69…624a`](https://stellar.expert/explorer/public/tx/5f866c6932a47ac9c008ea519332ff99b69e29ebd1da5446842f9aa57234624a) | [`f1d1a906…2c87`](https://stellar.expert/explorer/public/tx/f1d1a906a4a334728cbb945321b2427ea3589cf261c3c2f7ce48d8edc4032c87) |
-| 21 | [`1b07a6d4…4046`](https://stellar.expert/explorer/public/tx/1b07a6d4294c34012e92eab0b6e8359c68b09212029ac1336f3e8dddeb994046) | [`2d0a66f3…1ebb`](https://stellar.expert/explorer/public/tx/2d0a66f370c74522a383dbdc8a50ebeb709cbce2c16aa03819b3430b56791ebb) | [`3def5162…6675`](https://stellar.expert/explorer/public/tx/3def5162d39d06f362e18461d317020f9ab506d8858e1e4ee8f4c30b648e6675) |
-| 22 | [`f67754a9…3fd1`](https://stellar.expert/explorer/public/tx/f67754a9bdf77bb8f08b6b1938b5e6a67f9e3359e6cb31538bacbfa5acc03fd1) | [`0095406a…e3d5`](https://stellar.expert/explorer/public/tx/0095406a12f79922d2b78768f4de3f941121f725ff222e49d59f869fdd2ae3d5) | [`811ca5fc…5997`](https://stellar.expert/explorer/public/tx/811ca5fcb4a91a128608a8b6a281a00899350a379b77479fa565450aa3005997) |
-
-Wallet 18 also recovered a retry deposit in [`a03a9478…70ad`](https://stellar.expert/explorer/public/tx/a03a9478679a6f8ccb70a6277c3c83d99e0d21ce08ff7b5fb399d6a472f570ad). No funded booking remains.
-
-This project covers users 15–22 of a 22-user Mainnet validation set; users 01–14 validated [AI API Toll Booth](https://github.com/trungdo128/AI-API-Toll-Booth).
+| 01 | [`a1db6708…ca83`](https://stellar.expert/explorer/public/tx/a1db67084d8d9936efad4f1b96f5ccc65bdd4937278d8f436d4008d3125fca83) | [`17180619…0369`](https://stellar.expert/explorer/public/tx/17180619acc34336ddb1050f27cd285ecabbb8599c0f6b8fc42e9819b79c0369) | [`0a1eade0…f0b2`](https://stellar.expert/explorer/public/tx/0a1eade0e85a0470058813cbc8e7087e1fe9abb05d66b61a2491ba37ed59f0b2) |
+| 02 | [`efce4c2a…c4a4`](https://stellar.expert/explorer/public/tx/efce4c2acc910d5a1a98e6004585f48b4de0ed971aa0760ce36424746dcec4a4) | [`441db380…e045`](https://stellar.expert/explorer/public/tx/441db3804bbaec7d8bbaeb2d901c552e58ce7127b892431c52aee16b31ece045) | [`a28368ae…623a`](https://stellar.expert/explorer/public/tx/a28368ae483e97cbcf2cf7442c8d57870be780895a26a9da59fe87cd2302623a) |
+| 03 | [`f2f3782d…b7ed`](https://stellar.expert/explorer/public/tx/f2f3782d4fba7fa56893ee484e4594d55309d13e8b6e93de7a3d9921ed51b7ed) | [`006f72ac…691e`](https://stellar.expert/explorer/public/tx/006f72ac329e0e6a222bd7ec2402ff98d4a1c0ae84e707e1b7d460a04305691e) | [`877b8873…7846`](https://stellar.expert/explorer/public/tx/877b88739a76368103d02387b4d26d15a67967eedd814826a203314652177846) |
+| 04 | [`3a09f156…d419`](https://stellar.expert/explorer/public/tx/3a09f156aaf58eab4bd52a6ab8050856804bf56b5eebb9c11843e1ee6c7ed419) | [`2b0cf229…2add`](https://stellar.expert/explorer/public/tx/2b0cf2293dfcb31916cd64402f05340633fd7aa190d5d102873ba55372db2add) | [`831a57b2…0075`](https://stellar.expert/explorer/public/tx/831a57b2558d89c517e6b66665fc208f3383bb035788253ac1838c9d3ca20075) |
+| 05 | [`3b8a4e7f…fef5`](https://stellar.expert/explorer/public/tx/3b8a4e7f15e11a17cd31731836b9a0f2a3e8611bbfda2c3ca70797ca40b3fef5) | [`a9bddb33…296d`](https://stellar.expert/explorer/public/tx/a9bddb3356ab1f485379fc78dd5a0a66ac511d77a6ab88ea1babe07fc33f296d) | [`e590d2d1…4cf2`](https://stellar.expert/explorer/public/tx/e590d2d11766274479c28a4ae47486694ed841fc2704b2aae288812d1c6a4cf2) |
+| 06 | [`eb5c6175…01b5`](https://stellar.expert/explorer/public/tx/eb5c617575b8412c0c3dd8712732146fec6ff16d66435785fc1ab6f4ab8d01b5) | [`5f866c69…624a`](https://stellar.expert/explorer/public/tx/5f866c6932a47ac9c008ea519332ff99b69e29ebd1da5446842f9aa57234624a) | [`f1d1a906…2c87`](https://stellar.expert/explorer/public/tx/f1d1a906a4a334728cbb945321b2427ea3589cf261c3c2f7ce48d8edc4032c87) |
+| 07 | [`1b07a6d4…4046`](https://stellar.expert/explorer/public/tx/1b07a6d4294c34012e92eab0b6e8359c68b09212029ac1336f3e8dddeb994046) | [`2d0a66f3…1ebb`](https://stellar.expert/explorer/public/tx/2d0a66f370c74522a383dbdc8a50ebeb709cbce2c16aa03819b3430b56791ebb) | [`3def5162…6675`](https://stellar.expert/explorer/public/tx/3def5162d39d06f362e18461d317020f9ab506d8858e1e4ee8f4c30b648e6675) |
+| 08 | [`f67754a9…3fd1`](https://stellar.expert/explorer/public/tx/f67754a9bdf77bb8f08b6b1938b5e6a67f9e3359e6cb31538bacbfa5acc03fd1) | [`0095406a…e3d5`](https://stellar.expert/explorer/public/tx/0095406a12f79922d2b78768f4de3f941121f725ff222e49d59f869fdd2ae3d5) | [`811ca5fc…5997`](https://stellar.expert/explorer/public/tx/811ca5fcb4a91a128608a8b6a281a00899350a379b77479fa565450aa3005997) |
 
 ## Level 6 evidence map
 
@@ -71,7 +67,7 @@ This project covers users 15–22 of a 22-user Mainnet validation set; users 01�
 - Commit history: more than 30 meaningful commits
 - Live Mainnet application: [Railway production](https://povdeposit-production.up.railway.app/)
 - Mainnet contract: [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD)
-- Proof of Mainnet users: eight direct users here and the 22-user cross-project Mainnet set
+- Proof of Mainnet users: eight direct users with public transaction evidence above
 - Transaction activity proof: verified create, fund and refund hashes in the Mainnet validation ledger
 - Audit/security review proof: [full security audit report](docs/security/security-audit.md), [security policy](SECURITY.md) and [threat model](docs/security/threat-model.md)
 - X launch post: [NgVnTundgfz/status/2082132043144806733](https://x.com/NgVnTundgfz/status/2082132043144806733)
@@ -104,6 +100,6 @@ The production release includes responsive desktop and mobile property and booki
 
 Wallet extensions handle signatures. The application stores public addresses only, rejects the wrong network, hashes one-time challenges, keeps evidence access-controlled and never uses GPS as the sole proof.
 
-The published security material is an internal review, not an independent third-party audit. The cross-project Mainnet set contains 22 users, while this repository directly proves eight Mainnet users.
+The published security material is an internal review, not an independent third-party audit. This repository directly proves eight Mainnet users.
 
 Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [architecture](docs/architecture.md), [contract guide](docs/contract-guide.md) and [security model](docs/security/threat-model.md).
