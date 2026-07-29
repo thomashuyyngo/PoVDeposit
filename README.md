@@ -73,7 +73,7 @@ This project covers users 15–22 of a 22-user Mainnet validation set; users 01�
 - Mainnet contract: [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD)
 - Proof of Mainnet users: eight direct users here and the 22-user cross-project Mainnet set
 - Transaction activity proof: verified create, fund and refund hashes in the Mainnet validation ledger
-- Security review: [security policy](SECURITY.md) and [internal threat model](docs/security/threat-model.md)
+- Audit/security review proof: [full security audit report](docs/security/security-audit.md), [security policy](SECURITY.md) and [threat model](docs/security/threat-model.md)
 - X launch post: [NgVnTundgfz/status/2082132043144806733](https://x.com/NgVnTundgfz/status/2082132043144806733)
 - Demo video: [Google Drive walkthrough](https://drive.google.com/file/d/1oXwBFKk2INy1pXN5-qiUy1Zx6PGExppt/view?usp=sharing)
 - Technical documentation: [architecture](docs/architecture.md), [contract guide](docs/contract-guide.md), [API reference](docs/api-reference.md)
