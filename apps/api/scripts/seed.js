@@ -14,7 +14,7 @@ await prisma.hostApplication.upsert({
   create: {
     id: "00000000-0000-4000-8000-000000000801",
     walletId: wallet.id,
-    statement: "Deterministic Testnet sample host",
+    statement: "Mainnet launch property host",
     status: "APPROVED",
     reviewedAt: new Date("2026-07-28T00:00:00Z"),
   },
@@ -26,15 +26,23 @@ const property = await prisma.property.upsert({
     hostId: wallet.id,
     slug: "modern-apartment",
     title: "Modern 2-bed apartment",
-    description: "Testnet sample listing for the viewing-deposit flow.",
+    description: "Mainnet listing for the viewing-deposit flow.",
     district: "Horizon District",
-    addressHash: createHash("sha256").update("testnet-sample-address").digest("hex"),
+    addressHash: createHash("sha256").update("mainnet-launch-address").digest("hex"),
     active: true,
   },
 });
 for (const [id, startsAt, endsAt] of [
   ["00000000-0000-4000-8000-000000000811", "2030-05-22T08:00:00Z", "2030-05-22T08:30:00Z"],
   ["00000000-0000-4000-8000-000000000812", "2030-05-22T09:00:00Z", "2030-05-22T09:30:00Z"],
+  ["00000000-0000-4000-8000-000000000813", "2030-05-23T08:00:00Z", "2030-05-23T08:30:00Z"],
+  ["00000000-0000-4000-8000-000000000814", "2030-05-23T09:00:00Z", "2030-05-23T09:30:00Z"],
+  ["00000000-0000-4000-8000-000000000815", "2030-05-24T08:00:00Z", "2030-05-24T08:30:00Z"],
+  ["00000000-0000-4000-8000-000000000816", "2030-05-24T09:00:00Z", "2030-05-24T09:30:00Z"],
+  ["00000000-0000-4000-8000-000000000817", "2030-05-25T08:00:00Z", "2030-05-25T08:30:00Z"],
+  ["00000000-0000-4000-8000-000000000818", "2030-05-25T09:00:00Z", "2030-05-25T09:30:00Z"],
+  ["00000000-0000-4000-8000-000000000819", "2030-05-26T08:00:00Z", "2030-05-26T08:30:00Z"],
+  ["00000000-0000-4000-8000-000000000820", "2030-05-26T09:00:00Z", "2030-05-26T09:30:00Z"],
 ]) {
   await prisma.viewingSlot.upsert({
     where: { id },
@@ -43,4 +51,4 @@ for (const [id, startsAt, endsAt] of [
   });
 }
 await prisma.$disconnect();
-console.log("D8 Testnet property seed complete");
+console.log("D8 Mainnet property seed complete");
