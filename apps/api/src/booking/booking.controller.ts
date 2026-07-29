@@ -36,7 +36,7 @@ export class BookingController {
 
   @Get("activity/recent")
   async activity() {
-    return this.bookings.activity();
+    return (await this.bookings.activity()).map((booking) => this.serialize(booking));
   }
 
   @Post()

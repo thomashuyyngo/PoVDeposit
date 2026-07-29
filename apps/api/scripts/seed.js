@@ -21,7 +21,12 @@ await prisma.hostApplication.upsert({
 });
 const property = await prisma.property.upsert({
   where: { slug: "modern-apartment" },
-  update: { active: true },
+  update: {
+    title: "Modern 2-bed apartment",
+    description: "Mainnet listing for the viewing-deposit flow.",
+    addressHash: createHash("sha256").update("mainnet-launch-address").digest("hex"),
+    active: true,
+  },
   create: {
     hostId: wallet.id,
     slug: "modern-apartment",
