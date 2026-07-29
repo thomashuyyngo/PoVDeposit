@@ -1,3 +1,5 @@
-# Mainnet readiness
+# Mainnet deployment
 
-Mainnet stays disabled until current-source Testnet lifecycle evidence is complete, the accepted stablecoin and legal rule are approved, admin/arbitrator/upgrade roles use multisig, evidence retention and malware scanning are operational, monitoring and incident drills pass, and an independent contract/application review is complete.
+The minimal native-XLM escrow is live at `CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD`. It supports create, fund, pre-visit cancel/refund and post-visit host confirmation/refund. No admin withdrawal, upgrade, dispute or fee path exists in this deployment.
+
+An external audit and broader Mainnet user validation are still required before raising deposit limits or adding dispute/no-show settlement.

@@ -1,0 +1,13 @@
+{
+  "network": "PUBLIC",
+  "contractId": "CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD",
+  "deployer": "GCKJEORLGORT3BOUME2DQJQPKRSKST55BIZOSDZTNJ7FIGIV4KQMDDPX",
+  "wasmHash": "f74704e255eea9b38f6ad14be0ee7a369cf7cb7429e0f96900f14dfc69669cde",
+  "wasmBytes": 7427,
+  "transactions": {
+    "upload": "4ff47a3e543f3bbae1b3bb98fb263745ecf81c796b1e1a2448aaa29bdc476a26",
+    "deploy": "e07e47792aaf9f32fae8f9464261ddc585241e4b8f7f32609ddc091a05cbb65e",
+    "initialize": "4865fbab89b997e0a0bbee39c6d615147b8ea4abb0f3bc1c72e3e661ea7d0541"
+  },
+  "deploymentFeeXlm": "10.2590930"
+}
