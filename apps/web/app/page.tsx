@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeroBuilding } from "../components/hero-building";
+import { RecentActivity } from "../components/recent-activity";
 
 const properties = [
   ["Modern 2-bed apartment", "Greenway · Horizon District", "0.5 XLM", "2 bed · 2 bath · 78 m²"],
@@ -56,6 +57,7 @@ export default function Home() {
           <Link className="secondary wide" href="/host/">Open host workspace</Link>
         </article>
       </section>
+      <section className="docs-banner"><div><span><strong>Verified Mainnet activity</strong><small>Recent contract-backed bookings recorded by the application.</small></span></div><RecentActivity /></section>
       <section className="docs-banner"><div><span className="doc-icon">▤</span><span><strong>Documentation & guides</strong><small>Understand the flow, rules and protections.</small></span></div><Link className="primary" href="/docs/">Read the docs →</Link></section>
     </main>
   );

@@ -149,3 +149,4 @@ footer nav { margin-left: auto; display: flex; gap: 22px; }
   .search input, .wallet-option, .booking-form input { background: #f9fdfb; color: #102522; }
   .rule b, .booking-summary { background: #143934; }
 }
+.activity-list{display:flex;flex-wrap:wrap;gap:10px}.activity-list a{display:grid;gap:3px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none}.activity-list span{font-family:monospace;color:var(--muted)}
