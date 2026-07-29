@@ -4,12 +4,12 @@ import { Controller, Get } from "@nestjs/common";
 export class AppController {
   @Get("health")
   health() {
-    return { status: "ok", service: "pov-deposit", network: (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase() };
+    return { status: "ok", service: "pov-deposit", network: "PUBLIC" };
   }
 
   @Get("api/stellar-config")
   stellarConfig() {
-    const network = (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase();
+    const network = "PUBLIC";
     return {
       network,
       networkPassphrase: process.env.STELLAR_NETWORK_PASSPHRASE

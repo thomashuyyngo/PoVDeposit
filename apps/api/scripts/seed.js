@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 const address = "GB7CDHVP6LBMP3L5BJFXSTOWB4NX7ONPFN4537AFCWCNL7YD2MHSBZJN";
 const wallet = await prisma.walletIdentity.upsert({
   where: { address },
-  update: { network: "TESTNET" },
-  create: { address, network: "TESTNET" },
+  update: { network: "PUBLIC" },
+  create: { address, network: "PUBLIC" },
 });
 await prisma.hostApplication.upsert({
   where: { id: "00000000-0000-4000-8000-000000000801" },

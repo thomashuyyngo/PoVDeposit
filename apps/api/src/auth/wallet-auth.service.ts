@@ -30,7 +30,7 @@ export class WalletAuthService {
     if (!this.origins.includes(origin)) throw new Error("Origin not allowed");
     Keypair.fromPublicKey(address);
     const id = randomUUID();
-    const network = (process.env.STELLAR_NETWORK || "TESTNET").toUpperCase();
+    const network = "PUBLIC";
     const expiresAt = new Date(this.now().getTime() + 5 * 60_000).toISOString();
     const message = [
       "Proof-of-Visit Deposit authentication",

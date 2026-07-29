@@ -15,7 +15,7 @@ declare global {
 }
 
 type WalletSession = { kind: "Freighter" | "Rabet"; address: string };
-const expectedNetwork = (process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET").toUpperCase();
+const expectedNetwork = "PUBLIC";
 const networkLabel = expectedNetwork === "PUBLIC" ? "Mainnet" : "Testnet";
 
 export function WalletDialog() {
