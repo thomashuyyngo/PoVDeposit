@@ -14,6 +14,7 @@ export class PropertyService {
         title: true,
         description: true,
         district: true,
+        host: { select: { address: true } },
         images: { orderBy: { position: "asc" }, select: { url: true, altText: true } },
         slots: {
           where: { startsAt: { gt: new Date() }, booking: null },
