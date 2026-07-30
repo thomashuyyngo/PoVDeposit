@@ -6,7 +6,7 @@ playwright-report/
 *.tsbuildinfo
 dist/
 coverage/
-packages/contracts/target/
+contracts/target/
 .env
 .env.*
 !.env.example

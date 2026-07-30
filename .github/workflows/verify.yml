@@ -61,10 +61,10 @@ jobs:
         with:
           targets: wasm32v1-none
           components: clippy,rustfmt
-      - run: cargo fmt --manifest-path packages/contracts/Cargo.toml --check
-      - run: cargo clippy --manifest-path packages/contracts/Cargo.toml -- -D warnings
-      - run: cargo test --manifest-path packages/contracts/Cargo.toml
-      - run: cargo build --manifest-path packages/contracts/Cargo.toml --target wasm32v1-none --release
+      - run: cargo fmt --manifest-path contracts/Cargo.toml --check
+      - run: cargo clippy --manifest-path contracts/Cargo.toml -- -D warnings
+      - run: cargo test --manifest-path contracts/Cargo.toml
+      - run: cargo build --manifest-path contracts/Cargo.toml --target wasm32v1-none --release
 
   secrets:
     runs-on: ubuntu-latest

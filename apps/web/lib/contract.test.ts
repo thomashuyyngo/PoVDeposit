@@ -1,11 +1,11 @@
 import { Contract, Keypair, nativeToScVal, scValToNative } from "@stellar/stellar-sdk";
 import { describe, expect, it } from "vitest";
-import { bookingArguments, escrowOperation } from "./escrow-transaction";
+import { bookingArguments, escrowMethods, escrowOperation } from "./contract";
 
 describe("escrowOperation", () => {
   it("encodes the selected contract method and booking id", () => {
     const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
-    const operation = escrowOperation(contractId, "fund_booking", [
+    const operation = escrowOperation(contractId, escrowMethods.fundBooking, [
       nativeToScVal(Keypair.random().publicKey(), { type: "address" }),
       nativeToScVal(42n, { type: "u64" }),
     ]);

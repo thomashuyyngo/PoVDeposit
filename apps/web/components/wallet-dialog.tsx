@@ -3,7 +3,7 @@
 import { getNetwork, isConnected, requestAccess } from "@stellar/freighter-api";
 import { useEffect, useRef, useState } from "react";
 import { isExpectedNetwork, shortAddress } from "../lib/network";
-import { walletStorageKey } from "../lib/escrow-transaction";
+import { walletStorageKey } from "../lib/contract";
 
 type Rabet = {
   connect?: () => Promise<{ publicKey?: string; error?: string }>;

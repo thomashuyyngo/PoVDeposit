@@ -7,10 +7,11 @@ import { z } from "zod";
 import { nativeToScVal } from "@stellar/stellar-sdk";
 import {
   bookingArguments,
+  escrowMethods,
   invokeEscrow,
   type StellarConfig,
   walletStorageKey,
-} from "../lib/escrow-transaction";
+} from "../lib/contract";
 
 const schema = z.object({
   selection: z.string().min(1, "Choose an available viewing time."),
@@ -77,14 +78,14 @@ export function BookingForm() {
       const configResponse = await fetch("/api/stellar-config");
       const config = await configResponse.json() as StellarConfig;
       if (!configResponse.ok || !config.contractId) throw new Error("Escrow contract is not configured.");
-      const created = await invokeEscrow(config, "create_booking", bookingArguments({
+      const created = await invokeEscrow(config, escrowMethods.createBooking, bookingArguments({
         bookingId: body.onChainBookingId,
         renter,
         host: property.host.address,
         depositAmount,
         visitTime: Math.floor(new Date(slot.startsAt).getTime() / 1_000),
       }), renter);
-      const funded = await invokeEscrow(config, "fund_booking", [
+      const funded = await invokeEscrow(config, escrowMethods.fundBooking, [
         nativeToScVal(renter, { type: "address" }),
         nativeToScVal(BigInt(body.onChainBookingId), { type: "u64" }),
       ], renter);

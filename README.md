@@ -30,10 +30,21 @@ A booking settles at most once. Disputes and no-show penalties remain off-chain 
 
 - `apps/web`: Next.js static export with property search, booking review, renter/host/admin views, Freighter and Rabet modal, responsive modes and a lazy React Three Fiber building scene.
 - `apps/api`: NestJS, Prisma and PostgreSQL for wallet sessions, approved properties, slots, booking records, QR challenges, disputes, audit logs and contract reconciliation.
-- `packages/contracts`: Rust `VisitDepositEscrow` Soroban contract.
+- `contracts`: Rust `VisitDepositEscrow` Soroban contract.
 - `packages/stellar`: generated TypeScript bindings.
 
 The browser is never authoritative for funding or settlement. The backend accepts a state change only after a successful Mainnet transaction containing the matching contract event.
+
+## Smart contract entrypoints
+
+- Contract manifest: [`contracts/pov_deposit_escrow/Cargo.toml`](contracts/pov_deposit_escrow/Cargo.toml)
+- Soroban source: [`contracts/pov_deposit_escrow/src/lib.rs`](contracts/pov_deposit_escrow/src/lib.rs)
+- Frontend integration: [`apps/web/lib/contract.ts`](apps/web/lib/contract.ts)
+- Mainnet booking action: [`apps/web/components/booking-form.tsx`](apps/web/components/booking-form.tsx)
+- Generated TypeScript binding: [`packages/stellar/src/index.ts`](packages/stellar/src/index.ts)
+- Contract and frontend CI: [`.github/workflows/verify.yml`](.github/workflows/verify.yml)
+
+The booking UI calls `create_booking` and `fund_booking` on `VisitDepositEscrow`, prepares the Soroban transaction with `@stellar/stellar-sdk`, requests the renter's Freighter signature, submits it to Mainnet RPC and displays both transaction hashes.
 
 ## Live Mainnet deployment
 

@@ -9,7 +9,7 @@
     "lint": "corepack pnpm -r lint",
     "typecheck": "corepack pnpm -r typecheck",
     "test": "corepack pnpm -r test",
-    "test:contracts": "cargo test --manifest-path packages/contracts/Cargo.toml",
+    "test:contracts": "cargo test --manifest-path contracts/Cargo.toml",
     "start": "corepack pnpm --filter @pov-deposit/api start",
     "migrate": "corepack pnpm --filter @pov-deposit/api migrate",
     "seed": "corepack pnpm --filter @pov-deposit/api seed"

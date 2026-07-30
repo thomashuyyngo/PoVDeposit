@@ -10,6 +10,17 @@ import {
 
 export const walletStorageKey = "pov-deposit:last-public-wallet";
 
+export const escrowMethods = {
+  booking: "booking",
+  cancelBooking: "cancel_booking",
+  confirmVisit: "confirm_visit",
+  createBooking: "create_booking",
+  fundBooking: "fund_booking",
+  initialize: "initialize",
+} as const;
+
+export type EscrowMethod = (typeof escrowMethods)[keyof typeof escrowMethods];
+
 export type StellarConfig = {
   network: string;
   networkPassphrase: string;
@@ -18,7 +29,7 @@ export type StellarConfig = {
   contractId: string;
 };
 
-export function escrowOperation(contractId: string, method: string, args: xdr.ScVal[]) {
+export function escrowOperation(contractId: string, method: EscrowMethod, args: xdr.ScVal[]) {
   return new Contract(contractId).call(method, ...args);
 }
 
@@ -40,7 +51,7 @@ export function bookingArguments(input: {
 
 export async function invokeEscrow(
   config: StellarConfig,
-  method: string,
+  method: EscrowMethod,
   args: xdr.ScVal[],
   address: string,
 ) {
