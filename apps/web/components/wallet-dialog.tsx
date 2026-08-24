@@ -4,6 +4,7 @@ import { getNetwork, isConnected, requestAccess } from "@stellar/freighter-api";
 import { useEffect, useRef, useState } from "react";
 import { isExpectedNetwork, shortAddress } from "../lib/network";
 import { walletStorageKey } from "../lib/contract";
+import { stellarProfile } from "../lib/stellar-network";
 
 type Rabet = {
   connect?: () => Promise<{ publicKey?: string; error?: string }>;
@@ -15,8 +16,7 @@ declare global {
 }
 
 type WalletSession = { kind: "Freighter" | "Rabet"; address: string };
-const expectedNetwork = "PUBLIC";
-const networkLabel = expectedNetwork === "PUBLIC" ? "Mainnet" : "Testnet";
+const { network: expectedNetwork, label: networkLabel } = stellarProfile();
 
 export function WalletDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
