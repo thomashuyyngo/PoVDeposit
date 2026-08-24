@@ -8,7 +8,10 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "set PORT=3108&& corepack pnpm --filter @pov-deposit/api start",
+    // Passing PORT through `env` keeps this working off Windows, where `set VAR=`
+    // is not how a POSIX shell exports a variable and the API would bind 3000.
+    command: "corepack pnpm --filter @pov-deposit/api start",
+    env: { PORT: "3108" },
     cwd: "../..",
     url: "http://127.0.0.1:3108/health",
     reuseExistingServer: true,
