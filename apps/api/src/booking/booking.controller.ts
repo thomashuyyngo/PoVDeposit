@@ -1,6 +1,8 @@
-import { BadRequestException, Body, Controller, Get, Inject, Param, Post } from "@nestjs/common";
+import { createHash } from "node:crypto";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Inject, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { BookingWorkflowService } from "./booking-workflow.service.js";
+import { CheckInChallengeService } from "../checkin/check-in-challenge.service.js";
 import { ContractTransactionVerifier } from "../stellar/contract-transaction-verifier.js";
 import type { StellarSettings } from "../config/stellar.config.js";
 import { STELLAR_SETTINGS } from "../config/stellar.tokens.js";
@@ -18,11 +20,16 @@ const transactionInput = z.object({
   transactionHash: z.string().regex(/^[a-f0-9]{64}$/i),
 }).strict();
 
-// Check-in is the one step the escrow contract has no call for: it moves no funds,
-// so the renter commits a proof hash off-chain and the host settles on-chain after.
-const actorProofInput = z.object({
+// Check-in is the one step the escrow contract has no call for: it moves no funds.
+// Presence is proved instead by a short-lived challenge the host issues at the
+// property, which the renter has two minutes to hand back.
+const actorInput = z.object({
   actor: z.string().min(1).max(100),
-  proofHash: z.string().regex(/^[a-f0-9]{64}$/i),
+}).strict();
+
+const actorTokenInput = z.object({
+  actor: z.string().min(1).max(100),
+  token: z.string().min(1).max(2048),
 }).strict();
 
 const actorTransactionInput = z.object({
@@ -36,6 +43,7 @@ export class BookingController {
     private readonly bookings: BookingWorkflowService,
     private readonly transactions: ContractTransactionVerifier,
     @Inject(STELLAR_SETTINGS) private readonly stellar: StellarSettings,
+    private readonly checkInChallenges: CheckInChallengeService,
   ) {}
 
   @Get("activity/recent")
@@ -78,10 +86,28 @@ export class BookingController {
     return this.serialize(await this.bookings.refund(id, input.actor, input.transactionHash, verification));
   }
 
+  @Post(":id/check-in-challenge")
+  async checkInChallenge(@Param("id") id: string, @Body() body: unknown) {
+    const input = actorInput.parse(body);
+    const booking = await this.bookings.get(id);
+    if (booking.host !== input.actor) throw new ForbiddenException("Only the host can issue a check-in challenge");
+    const { token, payload } = await this.checkInChallenges.issue(id, booking.renter);
+    return { token, expiresAt: payload.expiresAt };
+  }
+
   @Post(":id/check-in")
   async checkIn(@Param("id") id: string, @Body() body: unknown) {
-    const input = actorProofInput.parse(body);
-    return this.serialize(await this.bookings.checkIn(id, input.actor, input.proofHash));
+    const input = actorTokenInput.parse(body);
+    let nonce: string;
+    try {
+      ({ nonce } = await this.checkInChallenges.consume(input.token, id, input.actor));
+    } catch (error) {
+      throw new BadRequestException(error instanceof Error ? error.message : "Check-in challenge rejected");
+    }
+    // The recorded proof is the hash of a nonce that existed for two minutes and
+    // can never be replayed, so the record stands for presence rather than intent.
+    const proofHash = createHash("sha256").update(nonce).digest("hex");
+    return this.serialize(await this.bookings.checkIn(id, input.actor, proofHash));
   }
 
   @Post(":id/confirm")

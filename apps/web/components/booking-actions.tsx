@@ -7,6 +7,7 @@ import {
   availableActions,
   fetchBooking,
   postBookingAction,
+  requestCheckInChallenge,
   type Booking,
   type BookingAction,
 } from "../lib/booking";
@@ -16,11 +17,6 @@ import {
   walletStorageKey,
   type StellarConfig,
 } from "../lib/contract";
-
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
 
 async function stellarConfig(): Promise<StellarConfig> {
   const response = await fetch("/api/stellar-config");
@@ -33,6 +29,7 @@ export function BookingActions() {
   const [reference, setReference] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
   const [status, setStatus] = useState("Enter a booking reference to manage it.");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
   const wallet = typeof window === "undefined" ? null : localStorage.getItem(walletStorageKey);
@@ -56,12 +53,18 @@ export function BookingActions() {
     setBusy(true);
     try {
       let updated: Booking;
+      if (action === "issue-challenge") {
+        const challenge = await requestCheckInChallenge(booking.id, wallet);
+        setCode(challenge.token);
+        setStatus(`Show this code to the renter. It expires ${new Date(challenge.expiresAt).toLocaleTimeString()}.`);
+        return;
+      }
       if (action === "check-in") {
-        // No contract call moves funds here, so the renter commits a proof hash
-        // that the host can check against the visit before releasing the deposit.
-        setStatus("Recording the check-in proof…");
-        const proofHash = await sha256(`${booking.id}:${booking.onChainBookingId}:${wallet}`);
-        updated = await postBookingAction(booking.id, action, { actor: wallet, proofHash });
+        // No contract call moves funds here. Presence is proved by the host's
+        // short-lived code, which the API consumes exactly once.
+        if (!code.trim()) throw new Error("Enter the check-in code shown by the host.");
+        setStatus("Recording the check-in…");
+        updated = await postBookingAction(booking.id, action, { actor: wallet, token: code.trim() });
       } else {
         const method = action === "confirm" ? escrowMethods.confirmVisit : escrowMethods.cancelBooking;
         setStatus("Approve the escrow call in Freighter…");
@@ -102,6 +105,17 @@ export function BookingActions() {
           <div><dt>Deposit</dt><dd>{booking.depositAmount} stroops</dd></div>
           <div><dt>Visit</dt><dd>{new Date(booking.visitTime).toLocaleString()}</dd></div>
         </dl>
+      ) : null}
+
+      {booking && wallet && (wallet === booking.renter || code) ? (
+        <label className="search">
+          <span className="sr-only">Check-in code</span>
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder="Check-in code from the host"
+          />
+        </label>
       ) : null}
 
       {booking && !wallet ? <p aria-live="polite">Connect Freighter to act on this booking.</p> : null}

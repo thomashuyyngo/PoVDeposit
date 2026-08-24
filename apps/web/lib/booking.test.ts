@@ -22,8 +22,8 @@ describe("availableActions", () => {
     expect(availableActions(booking, "GRENTER")).toEqual(["check-in", "cancel"]);
   });
 
-  it("does not let the host touch a funded booking", () => {
-    expect(availableActions(booking, "GHOST")).toEqual([]);
+  it("lets the host issue the check-in code on a funded booking", () => {
+    expect(availableActions(booking, "GHOST")).toEqual(["issue-challenge"]);
   });
 
   it("lets only the host release a checked-in deposit", () => {
@@ -46,6 +46,7 @@ describe("availableActions", () => {
 
 describe("actionLabel", () => {
   it("says what each action does to the deposit", () => {
+    expect(actionLabel("issue-challenge")).toMatch(/code/i);
     expect(actionLabel("check-in")).toMatch(/check-in/i);
     expect(actionLabel("confirm")).toMatch(/release/i);
     expect(actionLabel("cancel")).toMatch(/refund/i);

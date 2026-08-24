@@ -23,7 +23,21 @@ export type Booking = {
   settlementTransactionHash?: string;
 };
 
-export type BookingAction = "check-in" | "confirm" | "cancel";
+export type BookingAction = "issue-challenge" | "check-in" | "confirm" | "cancel";
+
+export type CheckInChallenge = { token: string; expiresAt: string };
+
+/** The host issues the challenge at the property; the renter has two minutes to use it. */
+export async function requestCheckInChallenge(id: string, actor: string): Promise<CheckInChallenge> {
+  const response = await fetch(`/api/bookings/${encodeURIComponent(id)}/check-in-challenge`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ actor }),
+  });
+  const payload = await response.json().catch(() => ({})) as CheckInChallenge & { message?: string };
+  if (!response.ok) throw new Error(payload.message || `Could not issue a challenge (HTTP ${response.status})`);
+  return payload;
+}
 
 /**
  * The escrow only allows one move per state, and only by one of the two parties.
@@ -37,6 +51,7 @@ export function availableActions(booking: Booking, wallet: string | null): Booki
 
   if (booking.state === "FUNDED") {
     if (isRenter) return ["check-in", "cancel"];
+    if (isHost) return ["issue-challenge"];
     return [];
   }
   if (booking.state === "CHECKED_IN" && isHost) return ["confirm"];
@@ -44,6 +59,7 @@ export function availableActions(booking: Booking, wallet: string | null): Booki
 }
 
 export function actionLabel(action: BookingAction): string {
+  if (action === "issue-challenge") return "Show the check-in code";
   if (action === "check-in") return "Record check-in";
   if (action === "confirm") return "Confirm visit and release deposit";
   return "Cancel and refund deposit";
