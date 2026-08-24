@@ -2,13 +2,14 @@ import Link from "next/link";
 import { HeroBuilding } from "../components/hero-building";
 import { PropertyList } from "../components/property-list";
 import { RecentActivity } from "../components/recent-activity";
+import { stellarProfile } from "../lib/stellar-network";
 
 export default function Home() {
   return (
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <span className="network-pill">⌁ Stellar Mainnet</span>
+          <span className="network-pill">⌁ Stellar {stellarProfile().label}</span>
           <h1>Book the viewing.<br /><em>Keep the deposit fair.</em></h1>
           <p>A transparent escrow for rental appointments. Review the rule, lock a small deposit, prove the visit and receive the contract-defined outcome.</p>
           <div className="hero-actions"><Link className="primary" href="/properties/">Browse properties</Link><Link className="secondary" href="/book/">Review deposit rules</Link></div>

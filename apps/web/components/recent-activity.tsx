@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { stellarProfile } from "../lib/stellar-network";
 import { explorerTransactionUrl } from "../lib/stellar-network";
 
 type Activity = {
@@ -19,7 +20,7 @@ export function RecentActivity() {
       .then(setItems)
       .catch(() => setItems([]));
   }, []);
-  if (!items.length) return <p>No verified Mainnet bookings yet.</p>;
+  if (!items.length) return <p>No verified {stellarProfile().label} bookings yet.</p>;
   return <div className="activity-list">{items.map((item) => {
     const hash = item.settlementTransactionHash || item.fundingTransactionHash;
     return <a href={hash ? explorerTransactionUrl(hash) : undefined} key={item.id} target="_blank" rel="noreferrer">
