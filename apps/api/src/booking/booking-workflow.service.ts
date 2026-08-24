@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service.js";
+import type { StellarSettings } from "../config/stellar.config.js";
+import { STELLAR_SETTINGS } from "../config/stellar.tokens.js";
 
 export type BookingState =
   | "PENDING_FUNDING"
@@ -45,6 +47,7 @@ export class BookingWorkflowService {
   constructor(
     @Optional() @Inject(BOOKING_CLOCK) private readonly now: () => Date = () => new Date(),
     @Optional() private readonly prisma?: PrismaService,
+    @Optional() @Inject(STELLAR_SETTINGS) private readonly stellar: StellarSettings = { network: "PUBLIC" } as StellarSettings,
   ) {}
 
   async create(input: CreateBooking): Promise<Booking> {
@@ -84,8 +87,8 @@ export class BookingWorkflowService {
         }
         const renter = await database.walletIdentity.upsert({
           where: { address: input.renter },
-          update: { network: "PUBLIC" },
-          create: { address: input.renter, network: "PUBLIC" },
+          update: { network: this.stellar.network },
+          create: { address: input.renter, network: this.stellar.network },
           select: { id: true },
         });
         const stored = await database.booking.create({

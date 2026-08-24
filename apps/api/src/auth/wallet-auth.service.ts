@@ -2,6 +2,8 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { Keypair } from "@stellar/stellar-sdk";
 import { PrismaService } from "../database/prisma.service.js";
+import type { StellarSettings } from "../config/stellar.config.js";
+import { STELLAR_SETTINGS } from "../config/stellar.tokens.js";
 
 type Challenge = {
   id: string;
@@ -24,13 +26,14 @@ export class WalletAuthService {
     @Optional() @Inject(AUTH_CLOCK) private readonly now: () => Date = () => new Date(),
     @Optional() @Inject(ALLOWED_ORIGINS) private readonly origins: string[] = [],
     @Optional() private readonly prisma?: PrismaService,
+    @Optional() @Inject(STELLAR_SETTINGS) private readonly stellar: StellarSettings = { network: "PUBLIC" } as StellarSettings,
   ) {}
 
   async issue(address: string, origin: string) {
     if (!this.origins.includes(origin)) throw new Error("Origin not allowed");
     Keypair.fromPublicKey(address);
     const id = randomUUID();
-    const network = "PUBLIC";
+    const network = this.stellar.network;
     const expiresAt = new Date(this.now().getTime() + 5 * 60_000).toISOString();
     const message = [
       "Proof-of-Visit Deposit authentication",
