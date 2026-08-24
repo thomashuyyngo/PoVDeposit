@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { HeroBuilding } from "../components/hero-building";
+import { PropertyList } from "../components/property-list";
 import { RecentActivity } from "../components/recent-activity";
-
-const properties = [
-  ["Modern 2-bed apartment", "Greenway · Horizon District", "0.5 XLM", "2 bed · 2 bath · 78 m²"],
-  ["City studio with balcony", "Riverside · Central District", "0.3 XLM", "Studio · 1 bath · 42 m²"],
-  ["Spacious 1-bed residence", "Lakeside · North Point", "0.4 XLM", "1 bed · 1 bath · 60 m²"],
-];
 
 export default function Home() {
   return (
@@ -24,14 +19,7 @@ export default function Home() {
       <section className="workspace" aria-label="Product overview">
         <article className="panel property-panel">
           <div className="panel-title"><div><span className="eyebrow">Property search</span><h2>Find a property to view</h2></div><Link href="/properties/">View all →</Link></div>
-          <label className="search"><span className="sr-only">Search listings</span><input placeholder="Search by area, address or keyword" /></label>
-          <div className="property-list">{properties.map(([title, area, deposit, facts], index) =>
-            <Link className="property-row" href="/properties/modern-apartment/" key={title}>
-              <span className={`property-thumb property-${index + 1}`} aria-hidden="true" />
-              <span><strong>{title}</strong><small>{area}</small><small>{facts}</small></span>
-              <span className="deposit"><strong>{deposit}</strong><small>Suggested deposit</small></span>
-            </Link>
-          )}</div>
+          <PropertyList />
         </article>
 
         <article className="panel rules-panel">
