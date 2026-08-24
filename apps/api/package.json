@@ -8,7 +8,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test test/*.test.js && vitest run",
     "start": "node dist/main.js",
-    "start:dev": "node --watch --experimental-strip-types src/main.ts",
+    "start:dev": "node scripts/dev.js",
     "migrate": "prisma migrate deploy",
     "seed": "node scripts/seed.js"
   },
