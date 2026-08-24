@@ -1,10 +1,11 @@
 "use client";
 
-import { getNetwork, isConnected, requestAccess } from "@stellar/freighter-api";
+import { getNetwork, isConnected, requestAccess, signMessage } from "@stellar/freighter-api";
 import { useEffect, useRef, useState } from "react";
 import { isExpectedNetwork, shortAddress } from "../lib/network";
 import { walletStorageKey } from "../lib/contract";
 import { stellarProfile } from "../lib/stellar-network";
+import { requestChallenge, submitSignature, toBase64Signature } from "../lib/wallet-auth";
 
 type Rabet = {
   connect?: () => Promise<{ publicKey?: string; error?: string }>;
@@ -45,15 +46,35 @@ export function WalletDialog() {
     return { kind: "Rabet", address: access.publicKey } as const;
   }
 
+  // Freighter can sign the server's one-time challenge, which is what proves the
+  // address belongs to whoever is at the keyboard. Rabet exposes no message
+  // signing here, so it stays a read-only connection and is labelled as such.
+  async function authenticate(address: string) {
+    setStatus("Sign the login challenge…");
+    const challenge = await requestChallenge(address);
+    const signed = await signMessage(challenge.message, { address });
+    if (signed.error) throw new Error(String(signed.error));
+    await submitSignature({
+      challengeId: challenge.id,
+      address,
+      signature: toBase64Signature(signed.signedMessage),
+    });
+  }
+
   async function connect(kind: "Freighter" | "Rabet") {
     setStatus(`Waiting for ${kind}…`);
     try {
       const next = kind === "Freighter" ? await connectFreighter() : await connectRabet();
+      if (next.kind === "Freighter") await authenticate(next.address);
       localStorage.setItem(walletStorageKey, next.address);
       setSession(next);
-      setStatus(`${next.kind} connected to ${networkLabel}.`);
+      setStatus(next.kind === "Freighter"
+        ? `${next.kind} verified on ${networkLabel}.`
+        : `${next.kind} connected to ${networkLabel} without signature verification.`);
       dialog.current?.close();
     } catch (error) {
+      localStorage.removeItem(walletStorageKey);
+      setSession(null);
       setStatus(error instanceof Error ? error.message : "Wallet connection failed.");
     }
   }
