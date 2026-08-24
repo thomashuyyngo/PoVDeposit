@@ -22,7 +22,9 @@ The live release uses native Mainnet XLM. Users must review the real amount and 
 
 The MVP rule is intentionally small: cancellation before the visit refunds the renter, while host confirmation at or after the visit also returns the full deposit to the renter.
 
-`Created → Funded → Refunded/Released`
+`PENDING_FUNDING → FUNDED → CHECKED_IN → COMPLETED`, with cancellation before the visit refunding the renter instead.
+
+Check-in sits between funding and settlement and is the one step with no contract call, because it moves no funds: the host shows a single-use code at the property and the renter returns it within two minutes. Everything that moves money — funding, refund, release — is accepted only against a matching contract event. See [`docs/booking-state-machine.md`](docs/booking-state-machine.md).
 
 A booking settles at most once. Disputes and no-show penalties remain off-chain until an independently reviewed contract upgrade is justified.
 
