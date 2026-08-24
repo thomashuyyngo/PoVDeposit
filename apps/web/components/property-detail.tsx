@@ -10,10 +10,17 @@ type Property = {
   title: string;
   description: string;
   district: string;
-  host: { address: string };
-  images: Array<{ url: string; altText: string }>;
-  slots: Slot[];
+  host?: { address?: string };
+  images?: Array<{ url: string; altText: string }>;
+  slots?: Slot[];
 };
+
+/** A listing without a host address still renders; the page is not worth losing over one field. */
+function hostLabel(property: Property): string {
+  const address = property.host?.address;
+  if (!address) return "Not published";
+  return `${address.slice(0, 8)}…${address.slice(-6)}`;
+}
 
 type State =
   | { status: "loading" }
@@ -49,11 +56,11 @@ export function PropertyDetail({ slug }: { slug: string }) {
     <>
       <dl className="details">
         <div><dt>Area</dt><dd>{property.district}</dd></div>
-        <div><dt>Host</dt><dd>{property.host.address.slice(0, 8)}…{property.host.address.slice(-6)}</dd></div>
+        <div><dt>Host</dt><dd>{hostLabel(property)}</dd></div>
         <div><dt>About</dt><dd>{property.description}</dd></div>
       </dl>
       <h2>Available viewing times</h2>
-      {property.slots.length ? (
+      {property.slots?.length ? (
         <ul className="slot-list">
           {property.slots.map((slot) => (
             <li key={slot.id}>{new Date(slot.startsAt).toLocaleString()}</li>
