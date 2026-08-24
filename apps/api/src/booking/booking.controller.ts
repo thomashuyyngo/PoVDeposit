@@ -16,10 +16,11 @@ const transactionInput = z.object({
   transactionHash: z.string().regex(/^[a-f0-9]{64}$/i),
 }).strict();
 
+// Check-in is the one step the escrow contract has no call for: it moves no funds,
+// so the renter commits a proof hash off-chain and the host settles on-chain after.
 const actorProofInput = z.object({
   actor: z.string().min(1).max(100),
   proofHash: z.string().regex(/^[a-f0-9]{64}$/i),
-  transactionHash: z.string().regex(/^[a-f0-9]{64}$/i),
 }).strict();
 
 const actorTransactionInput = z.object({
@@ -77,8 +78,6 @@ export class BookingController {
   @Post(":id/check-in")
   async checkIn(@Param("id") id: string, @Body() body: unknown) {
     const input = actorProofInput.parse(body);
-    const booking = await this.bookings.get(id);
-    await this.transactions.verifyCheckIn(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.checkIn(id, input.actor, input.proofHash));
   }
 

@@ -12,10 +12,6 @@ export class ContractTransactionVerifier {
     return this.verifyEvent(transactionHash, bookingId, "booking_funded");
   }
 
-  async verifyCheckIn(transactionHash: string, bookingId: string) {
-    return this.verifyEvent(transactionHash, bookingId, "renter_checked_in");
-  }
-
   async verifySettlement(transactionHash: string, bookingId: string) {
     return this.verifyEvent(transactionHash, bookingId, "visit_confirmed");
   }

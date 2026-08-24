@@ -36,10 +36,10 @@ describe("ContractTransactionVerifier", () => {
     await expect(verifier.verifyFunding("b".repeat(64), "42")).rejects.toThrow("not successful");
   });
 
-  it("verifies check-in and settlement events for the same on-chain booking", async () => {
+  it("verifies settlement and refund events for the same on-chain booking", async () => {
     process.env.ESCROW_CONTRACT_ID = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
     const hash = "c".repeat(64);
-    const eventName = { value: "renter_checked_in" };
+    const eventName = { value: "deposit_refunded" };
     const verifier = new ContractTransactionVerifier({
       getTransaction: async () => ({
         status: rpc.Api.GetTransactionStatus.SUCCESS,
@@ -55,7 +55,7 @@ describe("ContractTransactionVerifier", () => {
       }),
     } as never);
 
-    await expect(verifier.verifyCheckIn(hash, "42")).resolves.toMatchObject({ ledger: 123 });
+    await expect(verifier.verifyRefund(hash, "42")).resolves.toMatchObject({ ledger: 123 });
     eventName.value = "visit_confirmed";
     await expect(verifier.verifySettlement(hash, "42")).resolves.toMatchObject({ ledger: 123 });
   });

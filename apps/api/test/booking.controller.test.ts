@@ -67,11 +67,10 @@ describe("BookingController", () => {
     expect(verifiedBookingId).not.toBe(booking.id);
   });
 
-  it("does not accept check-in without a matching on-chain event", async () => {
+  it("only lets the renter record a check-in", async () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
     const controller = new BookingController(service, {
       verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }),
-      verifyCheckIn: async () => { throw new Error("missing renter_checked_in event"); },
     } as never);
     const booking = await controller.create({
       listingId: "listing-01",
@@ -84,10 +83,38 @@ describe("BookingController", () => {
     await controller.fund(booking.id, { transactionHash: "b".repeat(64) });
 
     await expect(controller.checkIn(booking.id, {
+      actor: "GHOST",
+      proofHash: "c".repeat(64),
+    })).rejects.toThrow();
+    expect((await service.get(booking.id)).state).toBe("FUNDED");
+  });
+
+  it("carries a booking from funding through check-in to settlement", async () => {
+    const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
+    const controller = new BookingController(service, {
+      verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }),
+      verifySettlement: async () => ({ ledger: 2, confirmedAt: "2026-07-29T10:00:00Z" }),
+    } as never);
+    const booking = await controller.create({
+      listingId: "listing-01",
+      renter: "GRENTER",
+      host: "GHOST",
+      depositAmount: "10000000",
+      visitTime: "2026-07-29T10:00:00.000Z",
+      evidenceHash: "a".repeat(64),
+    });
+
+    await controller.fund(booking.id, { transactionHash: "b".repeat(64) });
+    const checkedIn = await controller.checkIn(booking.id, {
       actor: "GRENTER",
       proofHash: "c".repeat(64),
+    });
+    expect(checkedIn.state).toBe("CHECKED_IN");
+
+    const settled = await controller.confirm(booking.id, {
+      actor: "GHOST",
       transactionHash: "d".repeat(64),
-    })).rejects.toThrow("missing renter_checked_in event");
-    expect((await service.get(booking.id)).state).toBe("FUNDED");
+    });
+    expect(settled.state).toBe("COMPLETED");
   });
 });
