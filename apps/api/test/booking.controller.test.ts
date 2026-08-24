@@ -170,4 +170,23 @@ describe("BookingController", () => {
     });
     expect(settled.state).toBe("COMPLETED");
   });
+
+  it("answers a mistyped reference with 404 rather than 500", async () => {
+    const controller = new BookingController(
+      new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z")),
+      { verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }) } as never,
+      mainnet,
+      challenges(),
+    );
+
+    for (const call of [
+      () => controller.get("no-such-booking"),
+      () => controller.fund("no-such-booking", { transactionHash: "a".repeat(64) }),
+      () => controller.checkInChallenge("no-such-booking", { actor: "GHOST" }),
+      () => controller.confirm("no-such-booking", { actor: "GHOST", transactionHash: "a".repeat(64) }),
+    ]) {
+      const error = await call().catch((thrown) => thrown);
+      expect((error as { getStatus?: () => number }).getStatus?.()).toBe(404);
+    }
+  });
 });

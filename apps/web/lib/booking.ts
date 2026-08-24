@@ -67,8 +67,11 @@ export function actionLabel(action: BookingAction): string {
 
 export async function fetchBooking(id: string): Promise<Booking> {
   const response = await fetch(`/api/bookings/${encodeURIComponent(id)}`);
-  if (!response.ok) throw new Error(`Booking not found (HTTP ${response.status})`);
-  return await response.json() as Booking;
+  const payload = await response.json().catch(() => ({})) as Booking & { message?: string };
+  // Show what the server said. "Booking not found" tells someone to check the
+  // reference; "HTTP 500" only tells them something broke.
+  if (!response.ok) throw new Error(payload.message || `Could not load the booking (HTTP ${response.status})`);
+  return payload;
 }
 
 export async function postBookingAction(

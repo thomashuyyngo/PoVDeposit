@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { BadRequestException, Body, Controller, ForbiddenException, Get, Inject, Param, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Inject, NotFoundException, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { BookingWorkflowService } from "./booking-workflow.service.js";
 import { CheckInChallengeService } from "../checkin/check-in-challenge.service.js";
@@ -46,6 +46,20 @@ export class BookingController {
     private readonly checkInChallenges: CheckInChallengeService,
   ) {}
 
+  /**
+   * The workflow signals a missing booking with a plain Error, which Nest reports as
+   * 500. A mistyped reference is the caller's, so it is answered as one.
+   */
+  private async requireBooking(id: string) {
+    try {
+      return await this.bookings.get(id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Booking not found";
+      if (/not found/i.test(message)) throw new NotFoundException(message);
+      throw error;
+    }
+  }
+
   @Get("activity/recent")
   async activity() {
     return (await this.bookings.activity()).map((booking) => this.serialize(booking));
@@ -67,13 +81,13 @@ export class BookingController {
 
   @Get(":id")
   async get(@Param("id") id: string) {
-    return this.serialize(await this.bookings.get(id));
+    return this.serialize(await this.requireBooking(id));
   }
 
   @Post(":id/fund")
   async fund(@Param("id") id: string, @Body() body: unknown) {
     const input = transactionInput.parse(body);
-    const booking = await this.bookings.get(id);
+    const booking = await this.requireBooking(id);
     const verification = await this.transactions.verifyFunding(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.fund(id, input.transactionHash, verification));
   }
@@ -81,7 +95,7 @@ export class BookingController {
   @Post(":id/cancel")
   async cancel(@Param("id") id: string, @Body() body: unknown) {
     const input = actorTransactionInput.parse(body);
-    const booking = await this.bookings.get(id);
+    const booking = await this.requireBooking(id);
     const verification = await this.transactions.verifyRefund(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.refund(id, input.actor, input.transactionHash, verification));
   }
@@ -89,7 +103,7 @@ export class BookingController {
   @Post(":id/check-in-challenge")
   async checkInChallenge(@Param("id") id: string, @Body() body: unknown) {
     const input = actorInput.parse(body);
-    const booking = await this.bookings.get(id);
+    const booking = await this.requireBooking(id);
     if (booking.host !== input.actor) throw new ForbiddenException("Only the host can issue a check-in challenge");
     const { token, payload } = await this.checkInChallenges.issue(id, booking.renter);
     return { token, expiresAt: payload.expiresAt };
@@ -113,7 +127,7 @@ export class BookingController {
   @Post(":id/confirm")
   async confirm(@Param("id") id: string, @Body() body: unknown) {
     const input = actorTransactionInput.parse(body);
-    const booking = await this.bookings.get(id);
+    const booking = await this.requireBooking(id);
     await this.transactions.verifySettlement(input.transactionHash, booking.onChainBookingId);
     return this.serialize(await this.bookings.confirm(id, input.actor, input.transactionHash));
   }
