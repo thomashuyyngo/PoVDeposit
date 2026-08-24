@@ -61,7 +61,7 @@ The optimized Mainnet contract is 7,427 bytes and exposes only the six functions
 
 ## Mainnet validation ledger
 
-Eight Mainnet users completed the real contract lifecycle. Each deposit was returned by `cancel_booking`; the production activity view reads the verified PostgreSQL records and excludes unsigned booking intents.
+Thirteen Mainnet wallet accounts completed the contract lifecycle. Each deposit was returned by `cancel_booking`; the production activity view reads the verified PostgreSQL records and excludes unsigned booking intents.
 
 | Wallet | Create | Fund | Refund |
 |---:|---|---|---|
@@ -73,6 +73,11 @@ Eight Mainnet users completed the real contract lifecycle. Each deposit was retu
 | 06 | [`eb5c6175…01b5`](https://stellar.expert/explorer/public/tx/eb5c617575b8412c0c3dd8712732146fec6ff16d66435785fc1ab6f4ab8d01b5) | [`5f866c69…624a`](https://stellar.expert/explorer/public/tx/5f866c6932a47ac9c008ea519332ff99b69e29ebd1da5446842f9aa57234624a) | [`f1d1a906…2c87`](https://stellar.expert/explorer/public/tx/f1d1a906a4a334728cbb945321b2427ea3589cf261c3c2f7ce48d8edc4032c87) |
 | 07 | [`1b07a6d4…4046`](https://stellar.expert/explorer/public/tx/1b07a6d4294c34012e92eab0b6e8359c68b09212029ac1336f3e8dddeb994046) | [`2d0a66f3…1ebb`](https://stellar.expert/explorer/public/tx/2d0a66f370c74522a383dbdc8a50ebeb709cbce2c16aa03819b3430b56791ebb) | [`3def5162…6675`](https://stellar.expert/explorer/public/tx/3def5162d39d06f362e18461d317020f9ab506d8858e1e4ee8f4c30b648e6675) |
 | 08 | [`f67754a9…3fd1`](https://stellar.expert/explorer/public/tx/f67754a9bdf77bb8f08b6b1938b5e6a67f9e3359e6cb31538bacbfa5acc03fd1) | [`0095406a…e3d5`](https://stellar.expert/explorer/public/tx/0095406a12f79922d2b78768f4de3f941121f725ff222e49d59f869fdd2ae3d5) | [`811ca5fc…5997`](https://stellar.expert/explorer/public/tx/811ca5fcb4a91a128608a8b6a281a00899350a379b77479fa565450aa3005997) |
+| 09 | [`05483a15…8c81`](https://stellar.expert/explorer/public/tx/05483a155dfa0d7731b1637930a6132128c19dbf145917ebf2356bcd30348c81) | [`2fb6c7d2…44fe`](https://stellar.expert/explorer/public/tx/2fb6c7d290b9ad230c2ce7e36908231a35158f51ff1cce1d16d8fb500bcb44fe) | [`4d753ca2…a77d`](https://stellar.expert/explorer/public/tx/4d753ca28619f9c08e85382ebf6bcb58d3dd56e936c38c45e50aad361928a77d) |
+| 10 | [`e0eff217…8c6b`](https://stellar.expert/explorer/public/tx/e0eff217524623b11adf1476f3049bbd19bccbe213961939f3f304945dc78c6b) | [`ee7a68a9…0e28`](https://stellar.expert/explorer/public/tx/ee7a68a976e9d29be4dc5c4c37023add5e83eb48aa829924a02fc24c7b2e0e28) | [`fc38a6b9…5da8`](https://stellar.expert/explorer/public/tx/fc38a6b9254618b35ca64635715663471bbb9d9b106a57ff1e9adc2d2c7f5da8) |
+| 11 | [`59b668e3…7fb5`](https://stellar.expert/explorer/public/tx/59b668e35dcc7163f75ef7a6fe47add494ef29a219b3a6c324fe207e0fb77fb5) | [`eee5e004…8618`](https://stellar.expert/explorer/public/tx/eee5e0046a13046f6a12ef1b6e8dea1eecf2075b57d927be95bb1cafcb878618) | [`7427b0c4…70db`](https://stellar.expert/explorer/public/tx/7427b0c431b25feb8489bee52907aa0bc5d397373307297dc5cd99c7e61170db) |
+| 12 | [`afe513a1…52f2`](https://stellar.expert/explorer/public/tx/afe513a16786c67dcf9533b8ebadcbcd2d21068e7b1c589e86254d8425c552f2) | [`b71d635a…22c9`](https://stellar.expert/explorer/public/tx/b71d635aef96a461e2eba441063ec12667bf0f53636ccb90c3952c2e743322c9) | [`aea7e7aa…53ad`](https://stellar.expert/explorer/public/tx/aea7e7aa894d586398d9f9dbf2cd1ae103b4bbcd1bb830a2276ec6c97c2953ad) |
+| 13 | [`716590e4…06b8`](https://stellar.expert/explorer/public/tx/716590e4c5bec8e08875bf9fa3a694390e5228c95724aa4fccaa7317c92a06b8) | [`fbbbd5f0…b667`](https://stellar.expert/explorer/public/tx/fbbbd5f04cf90a35beb6fe2712ba5ecacd24037388dcfe476e77584b9facb667) | [`17a8a2cb…bcbb`](https://stellar.expert/explorer/public/tx/17a8a2cb0e34814411387bda9ab68b2f8f0c856317505b328e61a04191f8bcbb) |
 
 ## Level 6 evidence map
 
@@ -80,7 +85,7 @@ Eight Mainnet users completed the real contract lifecycle. Each deposit was retu
 - Commit history: more than 30 meaningful commits
 - Live Mainnet application: [Railway production](https://povdeposit-production.up.railway.app/)
 - Mainnet contract: [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD)
-- Proof of Mainnet users: eight direct users with public transaction evidence above
+- Proof of Mainnet activity: thirteen wallet accounts with public lifecycle evidence above
 - Transaction activity proof: verified create, fund and refund hashes in the Mainnet validation ledger
 - Audit/security review proof: [full security audit report](docs/security/security-audit.md), [security policy](SECURITY.md) and [threat model](docs/security/threat-model.md)
 - X launch post: [NgVnTundgfz/status/2082132043144806733](https://x.com/NgVnTundgfz/status/2082132043144806733)
@@ -113,6 +118,6 @@ The production release includes responsive desktop and mobile property and booki
 
 Wallet extensions handle signatures. The application stores public addresses only, rejects the wrong network, hashes one-time challenges, keeps evidence access-controlled and never uses GPS as the sole proof.
 
-The published security material is an internal review, not an independent third-party audit. This repository directly proves eight Mainnet users.
+The published security material is an internal review, not an independent third-party audit. This repository directly documents thirteen Mainnet wallet accounts.
 
 Start with the [renter guide](docs/renter-guide.md), [host guide](docs/host-guide.md), [wallet guide](docs/wallet-guide.md), [architecture](docs/architecture.md), [contract guide](docs/contract-guide.md) and [security model](docs/security/threat-model.md).

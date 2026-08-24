@@ -6,7 +6,7 @@
 | Minimum 30+ meaningful commits | Repository history contains more than 30 commits |
 | Live Mainnet application | [Railway production](https://povdeposit-production.up.railway.app/) |
 | Mainnet contract | [`CBTP…2TJD`](https://stellar.expert/explorer/public/contract/CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD) |
-| Mainnet users | 8 users with create, fund and refund transactions linked in the README |
+| Mainnet activity | 13 wallet accounts with create, fund and refund transactions linked in the README |
 | Transaction activity | Public create, fund and refund hashes in the README |
 | Audit/security review | [Security audit](docs/security/security-audit.md) |
 | X launch post | [Launch post](https://x.com/NgVnTundgfz/status/2082132043144806733) |

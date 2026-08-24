@@ -49,7 +49,7 @@ No unresolved critical or high-severity finding was identified.
 
 ## Mainnet verification
 
-The README links eight Mainnet users through create, fund and refund transactions. All verified deposits reached `REFUNDED`; no funded booking remains.
+The README links thirteen Mainnet wallet accounts through create, fund and refund transactions. All verified deposits reached `REFUNDED`; no funded booking remains.
 
 - Wasm upload: [`4ff47a3e…6a26`](https://stellar.expert/explorer/public/tx/4ff47a3e543f3bbae1b3bb98fb263745ecf81c796b1e1a2448aaa29bdc476a26)
 - Contract deployment: [`e07e4779…b65e`](https://stellar.expert/explorer/public/tx/e07e47792aaf9f32fae8f9464261ddc585241e4b8f7f32609ddc091a05cbb65e)
