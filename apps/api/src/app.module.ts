@@ -13,6 +13,8 @@ import { PropertyController } from "./property/property.controller.js";
 import { PropertyService } from "./property/property.service.js";
 import { rpc } from "@stellar/stellar-sdk";
 import { ContractTransactionVerifier, STELLAR_RPC } from "./stellar/contract-transaction-verifier.js";
+import { readStellarSettings, type StellarSettings } from "./config/stellar.config.js";
+import { STELLAR_SETTINGS } from "./config/stellar.tokens.js";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -26,10 +28,13 @@ import { ContractTransactionVerifier, STELLAR_RPC } from "./stellar/contract-tra
     PropertyService,
     ContractTransactionVerifier,
     {
+      provide: STELLAR_SETTINGS,
+      useFactory: () => readStellarSettings(),
+    },
+    {
       provide: STELLAR_RPC,
-      useFactory: () => new rpc.Server(
-        process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org",
-      ),
+      inject: [STELLAR_SETTINGS],
+      useFactory: (settings: StellarSettings) => new rpc.Server(settings.rpcUrl),
     },
     {
       provide: ALLOWED_ORIGINS,

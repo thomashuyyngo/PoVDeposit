@@ -1,7 +1,9 @@
-import { BadRequestException, Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Inject, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { BookingWorkflowService } from "./booking-workflow.service.js";
 import { ContractTransactionVerifier } from "../stellar/contract-transaction-verifier.js";
+import type { StellarSettings } from "../config/stellar.config.js";
+import { STELLAR_SETTINGS } from "../config/stellar.tokens.js";
 
 const createInput = z.object({
   listingId: z.string().min(1).max(100),
@@ -33,6 +35,7 @@ export class BookingController {
   constructor(
     private readonly bookings: BookingWorkflowService,
     private readonly transactions: ContractTransactionVerifier,
+    @Inject(STELLAR_SETTINGS) private readonly stellar: StellarSettings,
   ) {}
 
   @Get("activity/recent")
@@ -90,6 +93,6 @@ export class BookingController {
   }
 
   private serialize<T extends { depositAmount: bigint }>(booking: T) {
-    return { ...booking, depositAmount: booking.depositAmount.toString(), network: "PUBLIC" };
+    return { ...booking, depositAmount: booking.depositAmount.toString(), network: this.stellar.network };
   }
 }

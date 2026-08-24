@@ -1,12 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { BookingController } from "../src/booking/booking.controller.js";
+import type { StellarSettings } from "../src/config/stellar.config.js";
 import { BookingWorkflowService } from "../src/booking/booking-workflow.service.js";
+
+const mainnet: StellarSettings = {
+  network: "PUBLIC",
+  networkPassphrase: "Public Global Stellar Network ; September 2015",
+  rpcUrl: "https://stellar.api.onfinality.io/public",
+  horizonUrl: "https://horizon.stellar.org",
+  contractId: "CBTPBD7SACNHMCU7F6EB7UCWUCR5IFA4SP2DCDSRSZO4DCBO3BPO2TJD",
+};
 
 describe("BookingController", () => {
   it("creates a JSON-safe booking intent with explicit property evidence", async () => {
     const controller = new BookingController(
       new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z")),
       { verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }) } as never,
+      mainnet,
     );
     const result = await controller.create({
       listingId: "listing-01",
@@ -28,7 +38,7 @@ describe("BookingController", () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
     const controller = new BookingController(service, {
       verifyFunding: async () => { throw new Error("Transaction is not successful on Stellar Mainnet"); },
-    } as never);
+    } as never, mainnet);
     const booking = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",
@@ -51,7 +61,7 @@ describe("BookingController", () => {
         verifiedBookingId = bookingId;
         return { ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" };
       },
-    } as never);
+    } as never, mainnet);
     const booking = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",
@@ -71,7 +81,7 @@ describe("BookingController", () => {
     const service = new BookingWorkflowService(() => new Date("2026-07-28T10:00:00Z"));
     const controller = new BookingController(service, {
       verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }),
-    } as never);
+    } as never, mainnet);
     const booking = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",
@@ -94,7 +104,7 @@ describe("BookingController", () => {
     const controller = new BookingController(service, {
       verifyFunding: async () => ({ ledger: 1, confirmedAt: "2026-07-28T10:00:00Z" }),
       verifySettlement: async () => ({ ledger: 2, confirmedAt: "2026-07-29T10:00:00Z" }),
-    } as never);
+    } as never, mainnet);
     const booking = await controller.create({
       listingId: "listing-01",
       renter: "GRENTER",

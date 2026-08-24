@@ -1,22 +1,19 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Inject } from "@nestjs/common";
+import type { StellarSettings } from "./config/stellar.config.js";
+import { STELLAR_SETTINGS } from "./config/stellar.tokens.js";
 
 @Controller()
 export class AppController {
+  constructor(@Inject(STELLAR_SETTINGS) private readonly stellar: StellarSettings) {}
+
   @Get("health")
   health() {
-    return { status: "ok", service: "pov-deposit", network: "PUBLIC" };
+    return { status: "ok", service: "pov-deposit", network: this.stellar.network };
   }
 
   @Get("api/stellar-config")
   stellarConfig() {
-    const network = "PUBLIC";
-    return {
-      network,
-      networkPassphrase: process.env.STELLAR_NETWORK_PASSPHRASE
-        || (network === "PUBLIC" ? "Public Global Stellar Network ; September 2015" : "Test SDF Network ; September 2015"),
-      rpcUrl: process.env.STELLAR_RPC_URL || "https://soroban-testnet.stellar.org",
-      horizonUrl: process.env.STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org",
-      contractId: process.env.ESCROW_CONTRACT_ID || "",
-    };
+    const { network, networkPassphrase, rpcUrl, horizonUrl, contractId } = this.stellar;
+    return { network, networkPassphrase, rpcUrl, horizonUrl, contractId };
   }
 }
